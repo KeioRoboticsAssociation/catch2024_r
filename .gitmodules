@@ -1,0 +1,3 @@
+[submodule "catch2024_teamr_app/catch2024_teamr_gui_app"]
+	path = catch2024_teamr_app/catch2024_teamr_gui_app
+	url = git@github.com:KeioRoboticsAssociation/catch2024_teamr_gui_app.git
