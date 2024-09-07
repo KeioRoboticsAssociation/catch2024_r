@@ -1,0 +1,16 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/hirobon/ros2_ws/install/catch2024_teamr/lib/python3.10/site-packages",
+        "/home/hirobon/ros2_ws/install/rogilink3_interfaces/local/lib/python3.10/dist-packages",
+        "/home/hirobon/ros2_ws/install/rogidrive/lib/python3.10/site-packages",
+        "/home/hirobon/ros2_ws/install/rogidrive_msg/local/lib/python3.10/dist-packages",
+        "/home/hirobon/ros2_ws/install/catch2024_teamr_msgs/local/lib/python3.10/dist-packages",
+        "/home/hirobon/ros2_ws/install/catch2024_teamr_gui/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages",
+        "",
+        "/home/hirobon/.local/lib/python3.10/site-packages",
+        "/home/hirobon/.local/lib/python3.10/site-packages",
+        "/home/hirobon/.local/lib/python3.10/site-packages"
+    ]
+}

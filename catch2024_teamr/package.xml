@@ -14,6 +14,7 @@
 
   <exec_depend>catch2024_teamr_msg</exec_depend>
   <exec_depend>rogilink3_interfaces</exec_depend>
+  <exec_depend>rogidrive_msg</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>

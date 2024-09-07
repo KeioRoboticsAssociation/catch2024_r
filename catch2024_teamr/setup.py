@@ -25,6 +25,8 @@ setup(
         'console_scripts': [
             'image = catch2024_teamr.image:main',
             'mainarm_lowlayer = catch2024_teamr.mainarm.mainarm_lowlayer:main',
+            'mainarm_full_manual = catch2024_teamr.mainarm.full_manual:main',
+            'mainarm_viewer = catch2024_teamr.mainarm.mainarm_viewer:main',
         ],
     },
 )
