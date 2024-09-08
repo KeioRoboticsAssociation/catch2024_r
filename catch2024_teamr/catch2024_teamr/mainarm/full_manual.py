@@ -4,43 +4,12 @@ from catch2024_teamr_msgs.msg import MainArm
 from sensor_msgs.msg import Joy
 import math
 from enum import IntEnum
-
-
-class Buttons(IntEnum):
-    A = 0
-    B = 1
-    X = 2
-    Y = 3
-    LB = 4
-    RB = 5
-    SELECT = 6
-    START = 7
-    HOME = 8
-    LSTICK = 9
-    RSTICK = 10
-    SHARE = 11
-
-
-class Axes(IntEnum):
-    LX = 0
-    LY = 1
-    LT = 2
-    RX = 3
-    RY = 4
-    RT = 5
-    LDPAD = 6
-    RDPAD = 7
-
-
-class CoordinateMode(IntEnum):
-    POLAR = 0
-    CARTESIAN = 1
-
+from ..config.joy import *
 
 class FullManual(Node):
     def __init__(self):
         super().__init__('full_manual')
-        self.pose_pub = self.create_publisher(MainArm, '/mainarm_pose', 10)
+        self.pose_pub = self.create_publisher(MainArm, '/mainarm_target_pose', 10)
         self.joy_sub = self.create_subscription(
             Joy, '/joy', self.joy_callback, 5)
         self.get_logger().info('full_manual has been started')

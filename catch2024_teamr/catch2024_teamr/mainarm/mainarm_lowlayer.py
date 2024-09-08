@@ -35,7 +35,7 @@ class MinarmLowLayer(Node):
         self.rogidrive_pub = self.create_publisher(RogidriveMessage,
                                                    '/odrive_msg', 10)
         self.rogidrive_sub = self.create_subscription(RogidriveMultiArray,
-                                                      '/odrive_msg',
+                                                      '/odrive_status',
                                                       self.rogidrive_callback,
                                                       10)
         self.get_logger().info('mainarm_lowlayer has been started')

@@ -27,6 +27,7 @@ setup(
             'mainarm_lowlayer = catch2024_teamr.mainarm.mainarm_lowlayer:main',
             'mainarm_full_manual = catch2024_teamr.mainarm.full_manual:main',
             'mainarm_viewer = catch2024_teamr.mainarm.mainarm_viewer:main',
+            'mainarm_semi_auto = catch2024_teamr.mainarm.semi_auto:main',
         ],
     },
 )
