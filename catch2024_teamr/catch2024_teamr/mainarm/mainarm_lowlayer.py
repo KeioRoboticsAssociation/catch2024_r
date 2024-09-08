@@ -11,7 +11,8 @@ from rogidrive_msg.msg import RogidriveMessage, RogidriveMultiArray
 class MinarmLowLayer(Node):
     def __init__(self):
         super().__init__('mainarm_lowlayer')
-        self.subscription = self.create_subscription(MainArm,'/mainarm_pose',self.mainarm_lowlayer_callback,10)
+        self.subscription = self.create_subscription(MainArm,'/mainarm_target_pose',self.mainarm_lowlayer_callback,10)
+        self.pose_pub = self.create_publisher(MainArm, '/mainarm_current_pose', 10)
         self.rogilink_pub = self.create_publisher(Command, '/rogilink3/command', 10)
         self.rogidrive_pub = self.create_publisher(RogidriveMessage, '/rogidrive_msg', 10)
         self.get_logger().info('mainarm_lowlayer has been started')
