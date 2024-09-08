@@ -1,26 +1,30 @@
 from typing import Union
 import rclpy
 from rclpy.node import Node
-from catch2024_teamr_msgs.msg import MainArm
+from catch2024_teamr_msgs.msg import MainArm, Seiton
 import time
 import math
-from std_msgs.msg import String, Bool
+from std_msgs.msg import Bool
 from rogilink3_interfaces.msg import Command, Status, MotorCommand
 from rogidrive_msg.msg import RogidriveMessage, RogidriveMultiArray
 from rogidrive_msg.msg import RogidriveSetCount
-from .util import handtheta_to_pulsewidth, r_meter_to_rotate
+from .util import handtheta_to_pulsewidth, r_meter_to_rotate, y_meter_to_rotate
 from .util import theta_abs_to_count, theta_rad_to_rotate
-from .util import create_mainarm_status_msg
+from .util import create_mainarm_status_msg, conveyer_count_to_rotate
+from .util import flip_bool_to_pulsewidth, create_seiton_status_msg
 # 昇降DC, r ブラシレス, θ ブラシレス, ハンド サーボ1, サーボ2, サーボ3，開ループDC
 
 LIMIT_ELEV_LOWER = 15
-LIMIT_OMRON_SENSOR = 14
+LIMIT_CONVEYER_SENSOR = 0
 SERVO_HAND_THETA = 0
+SERVO_FLIP = 4
 MOTOR_ELEV = 0
 
 ABS_OFFSET = 0.0
 THETA_MAX_VEL = 15
 R_MAX_VEL = 5
+Y_MAX_VEL = 5
+CONVEYER_MAX_VEL = 5
 
 
 class MinarmLowLayer(Node):
@@ -31,15 +35,22 @@ class MinarmLowLayer(Node):
         # メンバ変数の初期化
         self.rogilink_cmd = Command()
         self.rogilink_status: Union[Status, None] = None
-        self.rogidrive_status = Union[RogidriveMultiArray, None]
+        self.rogidrive_status: Union[RogidriveMultiArray, None] = None
         self.mainarm_status = MainArm()
         self.prev_mainarm_cmd: Union[MainArm, None] = None
+        self.prev_seiton_cmd: Union[Seiton, None] = None
         self.initialized = False
 
         # pub, sub の初期化
-        self.subscription = self.create_subscription(
+        self.mainarm_sub = self.create_subscription(
             MainArm, '/mainarm_pose', self.mainarm_lowlayer_callback, 10)
-        self.publisher = self.create_publisher(String, '/mainarm_status', 10)
+        self.mainarm_pub = self.create_publisher(
+            MainArm, '/mainarm_status', 10)
+        self.seiton_sub = self.create_subscription(
+            Seiton, "/seiton_pose", self.seiton_lowlayer_callback, 10)
+        self.seiton_pub = self.create_publisher(Seiton, "/seiton_status", 10)
+        self.conveyer_sensor_pub = self.create_publisher(
+            Bool, '/conveyer_sensor', 10)
         self.rogilink_pub = self.create_publisher(Command,
                                                   '/rogilink3/command', 10)
         self.rogilink_sub = self.create_subscription(Status,
@@ -99,20 +110,26 @@ class MinarmLowLayer(Node):
             self.rogidrive_enable.publish(Bool(data=True))
         else:
             self.get_logger().info('Initializing...')
-            self.rogilink_cmd.motor[MOTOR_ELEV].input_mode = (
+            self.rogilink_cmd.motor[MOTOR_ELEV].input_mode = (  # type: ignore
                 MotorCommand.COMMAND_VOL)
-            self.rogilink_cmd.motor[MOTOR_ELEV].input_vol = -0.1
+            self.rogilink_cmd.motor[  # type: ignore
+                MOTOR_ELEV].input_vol = -0.1
             self.rogilink_pub.publish(self.rogilink_cmd)
 
-        self.publisher.publish(create_mainarm_status_msg(
+        self.mainarm_pub.publish(create_mainarm_status_msg(
             self.rogilink_status, self.rogidrive_status))
+        self.seiton_pub.publish(create_seiton_status_msg(
+            self.rogilink_status, self.rogidrive_status))
+        self.conveyer_sensor_pub.publish(
+            Bool(data=(
+                self.rogilink_status.limit >> LIMIT_CONVEYER_SENSOR) & 1 == 1))
 
     def mainarm_lowlayer_callback(self, msg: MainArm):
         if not self.initialized:
             return
         if self.prev_mainarm_cmd is None:
             self.prev_mainarm_cmd = msg
-        self.get_logger().info('%s' % msg.data)
+        self.get_logger().info('%s' % msg)
         if msg.theta - self.prev_mainarm_cmd.theta > 1.5 * math.pi:
             self.get_logger().error('delta theta is too large')
             return
@@ -120,12 +137,24 @@ class MinarmLowLayer(Node):
             msg.theta))  # rad, 角度境界に注意
         self.rogidrive_send('R', 1, R_MAX_VEL,
                             r_meter_to_rotate(msg.r))  # 0 ~ 1m
-        self.rogilink_cmd.motor[0].input_mode = MotorCommand.COMMAND_POS
+        self.rogilink_cmd.motor[0].input_mode = (  # type: ignore
+            MotorCommand.COMMAND_POS)
         self.rogilink_cmd.motor[0].input_pos = msg.lift  # type: ignore
         self.rogilink_cmd.servo[  # type: ignore
             SERVO_HAND_THETA].pulse_width_us = (
                 handtheta_to_pulsewidth(msg.handtheta))
         self.prev_mainarm_cmd = msg
+
+    def seiton_lowlayer_callback(self, msg: Seiton):
+        if not self.initialized:
+            return
+        self.rogidrive_send('Y', 1, Y_MAX_VEL, y_meter_to_rotate(msg.y))
+        self.rogidrive_send('CONVAYER', 1, CONVEYER_MAX_VEL,
+                            conveyer_count_to_rotate(msg.conveyer))
+        self.rogilink_cmd.servo[SERVO_FLIP].pulse_width_us = (  # type: ignore
+            flip_bool_to_pulsewidth(
+                msg.flip))
+        self.prev_seiton_cmd = msg
 
     def __del__(self):
         self.get_logger().info('mainarm_lowlayer has been destroyed')

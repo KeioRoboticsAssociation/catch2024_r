@@ -3,14 +3,16 @@ import math
 from rogidrive_msg.msg._rogidrive_message import RogidriveMessage
 from rogilink3_interfaces.msg import Status
 from rogidrive_msg.msg import RogidriveMultiArray
-from catch2024_teamr_msgs.msg import MainArm
+from catch2024_teamr_msgs.msg import MainArm, Seiton
 
 R_METER_TO_ROTATE_RATIO = 1
+CONVEYER_COUNT_TO_ROTATE_RATIO = 1
+Y_METER_TO_ROTATE_RATIO = 1
 
 
 def theta_abs_to_count(theta: float, offset: float) -> int:
-    return (float(theta) /
-            2048 + offset) * 30
+    return int((float(theta) /
+                2048 + offset) * 30)
 
 
 def theta_rad_to_rotate(theta: float) -> float:
@@ -23,6 +25,21 @@ def r_meter_to_rotate(r: float) -> float:
 
 def handtheta_to_pulsewidth(handtheta: float) -> float:
     return (handtheta + 1.57) / math.pi * 2000 + 500
+
+
+def y_meter_to_rotate(count: float) -> float:
+    return count * Y_METER_TO_ROTATE_RATIO
+
+
+def conveyer_count_to_rotate(count: int) -> float:
+    return count * CONVEYER_COUNT_TO_ROTATE_RATIO
+
+
+def flip_bool_to_pulsewidth(flip: bool) -> float:
+    if flip:
+        return 2000
+    else:
+        return 1000
 
 
 def create_mainarm_status_msg(rogilink: Status,
@@ -40,5 +57,20 @@ def create_mainarm_status_msg(rogilink: Status,
     msg.theta = theta.pos / 30 * 2 * math.pi
     msg.r = r.pos
     msg.lift = rogilink.motor[0].pos / R_METER_TO_ROTATE_RATIO
+
+    return msg
+
+
+def create_seiton_status_msg(rogilink: Status,
+                             rogidrive: RogidriveMultiArray) -> Seiton:
+    msg = Seiton()
+    for i in rogidrive.data:
+        if i.name == 'Y':
+            y = i
+        elif i.name == 'CONVEYER':
+            conveyer = i
+
+    msg.y = y.pos / Y_METER_TO_ROTATE_RATIO
+    msg.conveyer = conveyer.pos / CONVEYER_COUNT_TO_ROTATE_RATIO
 
     return msg
