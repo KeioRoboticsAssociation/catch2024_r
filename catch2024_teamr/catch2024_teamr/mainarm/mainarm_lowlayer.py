@@ -8,9 +8,9 @@ from std_msgs.msg import String, Bool
 from rogilink3_interfaces.msg import Command, Status, MotorCommand
 from rogidrive_msg.msg import RogidriveMessage, RogidriveMultiArray
 from rogidrive_msg.msg import RogidriveSetCount
-from util import handtheta_to_pulsewidth, r_meter_to_rotate
-from util import theta_abs_to_count, theta_rad_to_rotate
-from util import create_mainarm_status_msg
+from .util import handtheta_to_pulsewidth, r_meter_to_rotate
+from .util import theta_abs_to_count, theta_rad_to_rotate
+from .util import create_mainarm_status_msg
 # 昇降DC, r ブラシレス, θ ブラシレス, ハンド サーボ1, サーボ2, サーボ3，開ループDC
 
 LIMIT_ELEV_LOWER = 15
@@ -75,6 +75,7 @@ class MinarmLowLayer(Node):
 
     def timer_callback(self):
         if self.rogilink_status is None or self.rogidrive_status is None:
+            self.get_logger().warn('rogilink or rogidrive status has not been received')
             return
 
         if self.initialized:
@@ -98,7 +99,8 @@ class MinarmLowLayer(Node):
             self.rogidrive_enable.publish(Bool(data=True))
         else:
             self.get_logger().info('Initializing...')
-            self.rogilink_cmd.motor[MOTOR_ELEV].input_mode = MotorCommand.COMMAND_VOL
+            self.rogilink_cmd.motor[MOTOR_ELEV].input_mode = (
+                MotorCommand.COMMAND_VOL)
             self.rogilink_cmd.motor[MOTOR_ELEV].input_vol = -0.1
             self.rogilink_pub.publish(self.rogilink_cmd)
 
