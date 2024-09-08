@@ -78,28 +78,22 @@ class MinarmLowLayer(Node):
         msg.pos = pos
         self.rogidrive_pub.publish(msg)
 
-    def rogilink_callback(self, msg: Status):
-        self.rogilink_status = msg
-
-    def rogidrive_callback(self, msg: RogidriveMultiArray):
-        self.rogidrive_status = msg
-
-    def timer_callback(self):
+    def initialize(self):
         if self.rogilink_status is None or self.rogidrive_status is None:
-            self.get_logger().warn('rogilink or rogidrive status has not been received')
+            self.get_logger().warn(
+                'rogilink or rogidrive status has not been received')
             return
 
-        if self.initialized:
-            self.rogilink_pub.publish(self.rogilink_cmd)
-            return
-
+        # rogidriveがすべてidleか
         rogidrive_initialized = True
         for i in self.rogidrive_status.data:
             if i.mode != -1:
                 rogidrive_initialized = False
+
+        # 昇降のリミットが押されていて、rogidriveが初期化されているか
         if ((self.rogilink_status.limit >> LIMIT_ELEV_LOWER) & 1 == 0
                 and rogidrive_initialized):
-            self.get_logger().info('Initialization completed')
+            self.get_logger().info('Initialization complete')
             self.initialized = True
             self.rogidrive_set_count.publish(
                 RogidriveSetCount(name='THETA',
@@ -109,13 +103,31 @@ class MinarmLowLayer(Node):
             time.sleep(0.1)
             self.rogidrive_enable.publish(Bool(data=True))
         else:
+            # 昇降を下限まで下げる
             self.get_logger().info('Initializing...')
-            self.rogilink_cmd.motor[MOTOR_ELEV].input_mode = (  # type: ignore
-                MotorCommand.COMMAND_VOL)
+            self.rogilink_cmd.motor[  # type: ignore
+                MOTOR_ELEV].input_mode = (MotorCommand.COMMAND_VOL)
             self.rogilink_cmd.motor[  # type: ignore
                 MOTOR_ELEV].input_vol = -0.1
             self.rogilink_pub.publish(self.rogilink_cmd)
 
+    def rogilink_callback(self, msg: Status):
+        self.rogilink_status = msg
+
+    def rogidrive_callback(self, msg: RogidriveMultiArray):
+        self.rogidrive_status = msg
+
+    def timer_callback(self):
+        if self.rogilink_status is None or self.rogidrive_status is None:
+            self.get_logger().warn(
+                'rogilink or rogidrive status has not been received')
+            return
+
+        if not self.initialized:
+            self.initialize()
+            return
+
+        self.rogilink_pub.publish(self.rogilink_cmd)
         self.mainarm_pub.publish(create_mainarm_status_msg(
             self.rogilink_status, self.rogidrive_status))
         self.seiton_pub.publish(create_seiton_status_msg(
@@ -130,7 +142,7 @@ class MinarmLowLayer(Node):
         if self.prev_mainarm_cmd is None:
             self.prev_mainarm_cmd = msg
         self.get_logger().info('%s' % msg)
-        if msg.theta - self.prev_mainarm_cmd.theta > 1.5 * math.pi:
+        if abs(msg.theta - self.prev_mainarm_cmd.theta) > 1.5 * math.pi:
             self.get_logger().error('delta theta is too large')
             return
         self.rogidrive_send('THETA', 1, THETA_MAX_VEL, theta_rad_to_rotate(
