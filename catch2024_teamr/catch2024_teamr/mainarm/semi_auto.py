@@ -14,7 +14,7 @@ class SemiAuto(Node):
     def __init__(self):
         super().__init__('semi_auto')
         self.pose_pub = self.create_publisher(
-            MainArm, '/mainarm_target_pose', 10)
+            MainArm, '/mainarm/target_pose', 10)
 
         def load_index_csv(file_path):
             index_data = []
@@ -30,7 +30,7 @@ class SemiAuto(Node):
 
         self.get_logger().info('index_data: %s' % self.index_data)
 
-        self.state_pub = self.create_publisher(Int8, '/mainarm_state', 10)
+        self.state_pub = self.create_publisher(Int8, '/mainarm/state', 10)
         self.index_sub = self.create_subscription(
             Int8, '/index', self.index_callback, 5)
 

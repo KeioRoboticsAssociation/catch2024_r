@@ -43,14 +43,14 @@ class MinarmLowLayer(Node):
 
         # pub, sub の初期化
         self.mainarm_sub = self.create_subscription(
-            MainArm, '/mainarm_target_pose', self.mainarm_lowlayer_callback, 10)
+            MainArm, '/mainarm/target_pose', self.mainarm_lowlayer_callback, 10)
         self.mainarm_pub = self.create_publisher(
-            MainArm, '/mainarm_status', 10)
+            MainArm, '/mainarm/status', 10)
         self.seiton_sub = self.create_subscription(
-            Seiton, "/seiton_pose", self.seiton_lowlayer_callback, 10)
-        self.seiton_pub = self.create_publisher(Seiton, "/seiton_status", 10)
+            Seiton, "/seiton/pose", self.seiton_lowlayer_callback, 10)
+        self.seiton_pub = self.create_publisher(Seiton, "/seiton/status", 10)
         self.conveyer_sensor_pub = self.create_publisher(
-            Bool, '/conveyer_sensor', 10)
+            Bool, '/seiton/conveyer_sensor', 10)
         self.rogilink_pub = self.create_publisher(Command,
                                                   '/rogilink3/command', 10)
         self.rogilink_sub = self.create_subscription(Status,
