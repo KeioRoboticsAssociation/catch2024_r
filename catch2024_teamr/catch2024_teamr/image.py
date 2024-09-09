@@ -4,8 +4,8 @@ from rclpy.node import Node
 from std_msgs.msg import String
 import numpy as np
 
-lower_green = np.array([80*180/360, 20, 20])
-upper_green = np.array([180*180/360, 255, 230])
+lower_green = np.array([80*180/360, 30, 50])
+upper_green = np.array([240*180/360, 255, 200])
 
 lower_red = np.array([0, 128, 50])
 upper_red = np.array([1, 255, 255])
@@ -30,13 +30,13 @@ class ImageNode(Node):
         # cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 3) 
     
         cap.set(cv2.CAP_PROP_AUTO_WB, 0)
-        cap.set(cv2.CAP_PROP_WB_TEMPERATURE, 4700)
+        cap.set(cv2.CAP_PROP_WB_TEMPERATURE, 5000)
         cap.set(cv2.CAP_PROP_FOCUS, 100)
        
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
-        cap.set(cv2.CAP_PROP_GAIN, 50) 
-        cap.set(cv2.CAP_PROP_EXPOSURE, 60)
+        cap.set(cv2.CAP_PROP_GAIN, 20) 
+        cap.set(cv2.CAP_PROP_EXPOSURE, 15)
         
         # cap.set(cv2.CAP_PROP_FPS, 15)
 
@@ -47,7 +47,8 @@ class ImageNode(Node):
             if not ret:
                 self.get_logger().info('No frame')
                 break
-
+            
+            frame = frame[:,140:520]
             #コントラストを上げる
             frame = cv2.convertScaleAbs(frame, alpha=1.5, beta=0.1)
 
@@ -86,15 +87,15 @@ class ImageNode(Node):
                 green_pixel_ratio = cv2.countNonZero(green)/cv2.countNonZero(cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY))
                 red_pixel_ratio = cv2.countNonZero(red)/cv2.countNonZero(cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY))
                 if green_pixel_ratio == 0:
-                    green_pixel_ratio = 0.0001
+                    green_pixel_ratio = 0.000001
                 if red_pixel_ratio == 0:
-                    red_pixel_ratio = 0.0001
+                    red_pixel_ratio = 0.000001
 
                 print(green_pixel_ratio, red_pixel_ratio)
                 # find red color
 
  
-                if green_pixel_ratio/red_pixel_ratio > 3 :
+                if green_pixel_ratio/red_pixel_ratio > 150 and green_pixel_ratio > 0.03:
                     cv2.putText(frame, 'norishio', (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                     cv2.circle(frame, (x+int(w/2), y+int(h/2)), int((w+h)/4), (0, 255, 0), 4)
                 elif red_pixel_ratio/green_pixel_ratio >5 :
@@ -105,10 +106,6 @@ class ImageNode(Node):
                     cv2.circle(frame, (x+int(w/2), y+int(h/2)), int((w+h)/4), (0, 255, 255), 4)
 
                 # cv2.putText(frame, str(area), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                
-
-
-
 
             # print(areas)
             #biggest area index
