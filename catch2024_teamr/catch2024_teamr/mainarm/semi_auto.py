@@ -26,7 +26,7 @@ class SemiAuto(Node):
                     index_data.append([float(value) for value in row.values()])
             return index_data
 
-        self.index_data = load_index_csv('/home/hirobon/ros2_ws/src/catch2024/catch2024_teamr/catch2024_teamr/config/index.csv')
+        self.index_data = load_index_csv('/home/rogi/ros2_ws/src/catch2024_r/catch2024_teamr/catch2024_teamr/config/index.csv')
 
         self.get_logger().info('index_data: %s' % self.index_data)
 
