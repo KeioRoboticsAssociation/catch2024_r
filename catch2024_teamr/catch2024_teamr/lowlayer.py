@@ -21,10 +21,10 @@ SERVO_FLIP = 4
 MOTOR_ELEV = 0
 
 ABS_OFFSET = 0.0
-THETA_MAX_VEL = 15
-R_MAX_VEL = 5
-Y_MAX_VEL = 5
-CONVEYER_MAX_VEL = 5
+THETA_MAX_VEL = 15.0
+R_MAX_VEL = 5.0
+Y_MAX_VEL = 5.0
+CONVEYER_MAX_VEL = 5.0
 
 
 class MinarmLowLayer(Node):
@@ -43,7 +43,7 @@ class MinarmLowLayer(Node):
 
         # pub, sub の初期化
         self.mainarm_sub = self.create_subscription(
-            MainArm, '/mainarm_pose', self.mainarm_lowlayer_callback, 10)
+            MainArm, '/mainarm_target_pose', self.mainarm_lowlayer_callback, 10)
         self.mainarm_pub = self.create_publisher(
             MainArm, '/mainarm_status', 10)
         self.seiton_sub = self.create_subscription(
@@ -58,11 +58,11 @@ class MinarmLowLayer(Node):
                                                      self.rogilink_callback,
                                                      10)
         self.rogidrive_pub = self.create_publisher(RogidriveMessage,
-                                                   '/odrive_msg', 10)
+                                                   '/odrive_cmd', 10)
         self.rogidrive_enable = self.create_publisher(
             Bool, '/odrive_enable', 10)
         self.rogidrive_set_count = self.create_publisher(
-            RogidriveMessage, '/odrive_set_count', 10)
+            RogidriveSetCount, '/odrive_set_count', 10)
         self.rogidrive_sub = self.create_subscription(RogidriveMultiArray,
                                                       '/odrive_status',
                                                       self.rogidrive_callback,
@@ -147,8 +147,8 @@ class MinarmLowLayer(Node):
             return
         self.rogidrive_send('THETA', 1, THETA_MAX_VEL, theta_rad_to_rotate(
             msg.theta))  # rad, 角度境界に注意
-        self.rogidrive_send('R', 1, R_MAX_VEL,
-                            r_meter_to_rotate(msg.r))  # 0 ~ 1m
+        # self.rogidrive_send('R', 1, R_MAX_VEL,
+        #                     r_meter_to_rotate(msg.r))  # 0 ~ 1m
         self.rogilink_cmd.motor[0].input_mode = (  # type: ignore
             MotorCommand.COMMAND_POS)
         self.rogilink_cmd.motor[0].input_pos = msg.lift  # type: ignore

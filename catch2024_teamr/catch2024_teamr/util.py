@@ -23,8 +23,8 @@ def r_meter_to_rotate(r: float) -> float:
     return r * R_METER_TO_ROTATE_RATIO
 
 
-def handtheta_to_pulsewidth(handtheta: float) -> float:
-    return (handtheta + 1.57) / math.pi * 2000 + 500
+def handtheta_to_pulsewidth(handtheta: float) -> int:
+    return int((handtheta + 1.57) / math.pi * 2000 + 500)
 
 
 def y_meter_to_rotate(count: float) -> float:
@@ -35,7 +35,7 @@ def conveyer_count_to_rotate(count: int) -> float:
     return count * CONVEYER_COUNT_TO_ROTATE_RATIO
 
 
-def flip_bool_to_pulsewidth(flip: bool) -> float:
+def flip_bool_to_pulsewidth(flip: bool) -> int:
     if flip:
         return 2000
     else:
@@ -46,8 +46,8 @@ def create_mainarm_status_msg(rogilink: Status,
                               rogidrive: RogidriveMultiArray) -> MainArm:
     msg = MainArm()
 
-    theta: RogidriveMessage
-    r: RogidriveMessage
+    theta = RogidriveMessage()
+    r = RogidriveMessage()
     for i in rogidrive.data:
         if i.name == 'THETA':
             theta = i
@@ -64,6 +64,8 @@ def create_mainarm_status_msg(rogilink: Status,
 def create_seiton_status_msg(rogilink: Status,
                              rogidrive: RogidriveMultiArray) -> Seiton:
     msg = Seiton()
+    y = RogidriveMessage()
+    conveyer = RogidriveMessage()
     for i in rogidrive.data:
         if i.name == 'Y':
             y = i

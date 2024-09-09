@@ -6,7 +6,7 @@ import os
 
 def generate_launch_description():
     # get package source directory
-    package_dir = '/home/hirobon/ros2_ws/src/catch2024/catch2024_teamr_gui'
+    package_dir = '/home/rogi/ros2_ws/src/catch2024_r/catch2024_teamr_gui'
     
     return LaunchDescription([
         ExecuteProcess(
