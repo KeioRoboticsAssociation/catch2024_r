@@ -1,5 +1,6 @@
 from enum import IntEnum
 
+
 class States(IntEnum):
     INIT = 1
     GO_TARGET = 2

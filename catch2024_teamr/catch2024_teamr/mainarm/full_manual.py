@@ -4,12 +4,14 @@ from catch2024_teamr_msgs.msg import MainArm
 from sensor_msgs.msg import Joy
 import math
 from enum import IntEnum
-from ..config.joy import *
+from ..config.joy import Buttons, Axes, CoordinateMode
+
 
 class FullManual(Node):
     def __init__(self):
         super().__init__('full_manual')
-        self.pose_pub = self.create_publisher(MainArm, '/mainarm_target_pose', 10)
+        self.pose_pub = self.create_publisher(
+            MainArm, '/mainarm_target_pose', 10)
         self.joy_sub = self.create_subscription(
             Joy, '/joy', self.joy_callback, 5)
         self.get_logger().info('full_manual has been started')

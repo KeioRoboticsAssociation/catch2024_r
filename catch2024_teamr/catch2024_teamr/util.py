@@ -6,17 +6,17 @@ from rogidrive_msg.msg import RogidriveMultiArray
 from catch2024_teamr_msgs.msg import MainArm, Seiton
 
 R_METER_TO_ROTATE_RATIO = 1
-CONVEYER_COUNT_TO_ROTATE_RATIO = 1
+CONVEYER_COUNT_TO_ROTATE_RATIO = -1.12
 Y_METER_TO_ROTATE_RATIO = 1
 
 
 def theta_abs_to_count(theta: float, offset: float) -> int:
     return int((float(theta) /
-                2048 + offset) * 30)
+                2048 + offset) * 30) * -1
 
 
 def theta_rad_to_rotate(theta: float) -> float:
-    return theta / (2 * math.pi) * 30
+    return theta / (2 * math.pi) * 30 * -1
 
 
 def r_meter_to_rotate(r: float) -> float:
@@ -54,7 +54,7 @@ def create_mainarm_status_msg(rogilink: Status,
         elif i.name == 'R':
             r = i
 
-    msg.theta = theta.pos / 30 * 2 * math.pi
+    msg.theta = theta.pos / 30 * 2 * math.pi * -1
     msg.r = r.pos
     msg.lift = rogilink.motor[0].pos / R_METER_TO_ROTATE_RATIO
 

@@ -2,12 +2,11 @@ import rclpy
 from rclpy.node import Node
 from catch2024_teamr_msgs.msg import MainArm
 from sensor_msgs.msg import Joy
-from std_msgs.msg import Int8, Float32MultiArray
 import math
-from enum import IntEnum
 import time
-from ..config.joy import *
-from .states.states import *
+from ..config.joy import Buttons, Axes, CoordinateMode
+from .states.states import States
+from std_msgs.msg import Int8
 import csv
 
 
@@ -26,12 +25,14 @@ class SemiAuto(Node):
                     index_data.append([float(value) for value in row.values()])
             return index_data
 
-        self.index_data = load_index_csv('/home/rogi/ros2_ws/src/catch2024_r/catch2024_teamr/catch2024_teamr/config/index.csv')
+        self.index_data = load_index_csv(
+            '/home/rogi/ros2_ws/src/catch2024_r/catch2024_teamr/catch2024_teamr/config/index.csv')
 
         self.get_logger().info('index_data: %s' % self.index_data)
 
         self.state_pub = self.create_publisher(Int8, '/mainarm_state', 10)
-        self.index_sub = self.create_subscription(Int8, '/index', self.index_callback, 5)
+        self.index_sub = self.create_subscription(
+            Int8, '/index', self.index_callback, 5)
 
         self.state = 0
         self.joy_sub = self.create_subscription(
@@ -69,8 +70,10 @@ class SemiAuto(Node):
     def send_target(self, xyz):
         self.cartesian_xy = [xyz[0], xyz[1]]
         self.mainarm_msg.r = math.sqrt(xyz[0]**2 + xyz[1]**2)
-        self.mainarm_msg.theta = math.atan2(xyz[1], xyz[0]) if not -math.pi/2 > math.atan2(
-            xyz[1], xyz[0]) > -math.pi else math.atan2(xyz[1], xyz[0]) + 2*math.pi
+        self.mainarm_msg.theta = (
+            math.atan2(xyz[1], xyz[0])) if not (
+                -math.pi/2 > math.atan2(xyz[1], xyz[0]) > -math.pi
+        ) else (math.atan2(xyz[1], xyz[0]) + 2*math.pi)
         self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
         self.lift = xyz[2]
         self.pose_pub.publish(self.mainarm_msg)
@@ -82,7 +85,9 @@ class SemiAuto(Node):
     def wait_for_button(self, button):
         while True:
             rclpy.spin_once(self)
-            if self.joy_msg.buttons[button] != self.previous_joy_msg.buttons[button] and self.joy_msg.buttons[button]:
+            if (self.joy_msg.buttons[button]
+                != self.previous_joy_msg.buttons[button]
+                    and self.joy_msg.buttons[button]):
                 return
 
     def catch(self):
@@ -174,8 +179,12 @@ class SemiAuto(Node):
             elif self.mainarm_msg.r > 1.0:
                 self.mainarm_msg.r = 1.0
 
-            self.mainarm_msg.theta = math.atan2(self.cartesian_xy[1], self.cartesian_xy[0]) if not -math.pi/2 > math.atan2(
-                self.cartesian_xy[1], self.cartesian_xy[0]) > -math.pi else math.atan2(self.cartesian_xy[1], self.cartesian_xy[0]) + 2*math.pi
+            self.mainarm_msg.theta = math.atan2(
+                self.cartesian_xy[1], self.cartesian_xy[0]
+            ) if not (-math.pi/2 > math.atan2(
+                self.cartesian_xy[1], self.cartesian_xy[0]) > -math.pi
+            ) else math.atan2(
+                self.cartesian_xy[1], self.cartesian_xy[0]) + 2*math.pi
             if self.mainarm_msg.theta < -math.pi/2:
                 self.mainarm_msg.theta = -math.pi/2
             elif self.mainarm_msg.theta > math.pi*3/2:
@@ -215,7 +224,9 @@ class SemiAuto(Node):
         if self.joy_msg.buttons[Buttons.Y]:
             self.mainarm_msg.roller = False
 
-        if self.joy_msg.buttons[Buttons.HOME] != self.previous_joy_msg.buttons[Buttons.HOME] and self.joy_msg.buttons[Buttons.HOME]:
+        if (self.joy_msg.buttons[Buttons.HOME] !=
+                self.previous_joy_msg.buttons[Buttons.HOME]
+                and self.joy_msg.buttons[Buttons.HOME]):
             self.coordinate_mode = not self.coordinate_mode
 
         self.pose_pub.publish(self.mainarm_msg)
