@@ -11,7 +11,7 @@ class FullManual(Node):
         super().__init__('full_manual')
         self.pose_pub = self.create_publisher(MainArm, '/seiton/target_pose', 10)
         self.joy_sub = self.create_subscription(
-            Joy, '/joy_seiton', self.joy_callback, 5)
+            Joy, '/seiton/joy', self.joy_callback, 5)
         self.get_logger().info('full_manual has been started')
         self.mainarm_msg = MainArm()
         self.tmr = self.create_timer(0.01, self.timer_callback)
