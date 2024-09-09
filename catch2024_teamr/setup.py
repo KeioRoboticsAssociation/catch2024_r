@@ -12,7 +12,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        (os.path.join('share',package_name,'launch'),glob('launch/*.py'))
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.py'))
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -24,7 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'image = catch2024_teamr.image:main',
-            'mainarm_lowlayer = catch2024_teamr.mainarm.mainarm_lowlayer:main',
+            'lowlayer = catch2024_teamr.lowlayer:main',
             'mainarm_full_manual = catch2024_teamr.mainarm.full_manual:main',
             'mainarm_viewer = catch2024_teamr.mainarm.mainarm_viewer:main',
             'mainarm_semi_auto = catch2024_teamr.mainarm.semi_auto:main',
