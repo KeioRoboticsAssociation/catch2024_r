@@ -10,9 +10,13 @@ CONVEYER_COUNT_TO_ROTATE_RATIO = -1.12
 Y_METER_TO_ROTATE_RATIO = 1
 
 
-def theta_abs_to_count(theta: float, offset: float) -> int:
-    return int((float(theta) /
-                2048 + offset) * 30) * -1
+def theta_abs_to_count(theta: int, offset: float) -> int:
+    if theta - offset > 1536:
+        return int(float(theta - offset - 2048) /
+                   2048 * 30 * 8192)
+    else:
+        return int(float(theta - offset) /
+                   2048 * 30 * 8192)
 
 
 def theta_rad_to_rotate(theta: float) -> float:

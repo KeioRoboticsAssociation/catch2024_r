@@ -20,7 +20,7 @@ SERVO_HAND_THETA = 0
 SERVO_FLIP = 4
 MOTOR_ELEV = 0
 
-ABS_OFFSET = 0.0
+ABS_OFFSET = 30.0
 THETA_MAX_VEL = 15.0
 R_MAX_VEL = 20.0
 Y_MAX_VEL = 5.0
@@ -95,11 +95,24 @@ class MinarmLowLayer(Node):
                 and rogidrive_initialized):
             self.get_logger().info('Initialization complete')
             self.initialized = True
+            self.get_logger().info('Setting theta count... %f, %d' % (theta_abs_to_count(
+                self.rogilink_status.abs_enc,
+                ABS_OFFSET), self.rogilink_status.abs_enc,
+            ))
             self.rogidrive_set_count.publish(
                 RogidriveSetCount(name='THETA',
                                   count=theta_abs_to_count(
                                       self.rogilink_status.abs_enc,
                                       ABS_OFFSET)))
+            self.rogidrive_set_count.publish(
+                RogidriveSetCount(name='R', count=0)
+            )
+            self.rogidrive_set_count.publish(
+                RogidriveSetCount(name='Y', count=0)
+            )
+            self.rogidrive_set_count.publish(
+                RogidriveSetCount(name='CONVEYER', count=0)
+            )
             time.sleep(0.1)
             self.rogidrive_enable.publish(Bool(data=True))
         else:
@@ -145,10 +158,10 @@ class MinarmLowLayer(Node):
         if abs(msg.theta - self.prev_mainarm_cmd.theta) > 1.5 * math.pi:
             self.get_logger().error('delta theta is too large')
             return
-        # self.rogidrive_send('THETA', 1, THETA_MAX_VEL, theta_rad_to_rotate(
-        #     msg.theta))  # rad, 角度境界に注意
-        self.rogidrive_send('R', 1, R_MAX_VEL,
-                            r_meter_to_rotate(msg.r))  # 0 ~ 1m
+        self.rogidrive_send('THETA', 1, THETA_MAX_VEL, theta_rad_to_rotate(
+            msg.theta))  # rad, 角度境界に注意
+        # self.rogidrive_send('R', 1, R_MAX_VEL,
+        #                     r_meter_to_rotate(msg.r))  # 0 ~ 1m
         self.rogilink_cmd.motor[0].input_mode = (  # type: ignore
             MotorCommand.COMMAND_POS)
         if msg.lift < 0.0:
