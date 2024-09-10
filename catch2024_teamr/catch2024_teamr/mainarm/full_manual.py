@@ -36,7 +36,7 @@ class FullManual(Node):
             elif self.mainarm_msg.theta > math.pi*3/2:
                 self.mainarm_msg.theta = math.pi*3/2
 
-            self.mainarm_msg.r += self.joy_msg.axes[Axes.LY]/100
+            self.mainarm_msg.r += self.joy_msg.axes[Axes.LY] * 0.01
             if self.mainarm_msg.r < 0.0:
                 self.mainarm_msg.r = 0.0
             elif self.mainarm_msg.r > 1.0:
