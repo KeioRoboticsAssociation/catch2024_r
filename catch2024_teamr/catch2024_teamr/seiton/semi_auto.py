@@ -122,11 +122,12 @@ class FullManual(Node):
         if self.joy_msg.buttons[ButtonID.DEFAULT]:
             self.seiton_msg.mode = Mode.DEFAULT
 
-        if self.joy_msg.buttons[ButtonID.FORWARD]:
+        if self.joy_msg.buttons[ButtonID.FORWARD] and not self.previous_joy_msg.buttons[ButtonID.FORWARD]:
             self.seiton_msg.conveyer = 1.0
-        
-        if self.joy_msg.buttons[ButtonID.REVERSE]:
+        elif self.joy_msg.buttons[ButtonID.REVERSE] and not self.previous_joy_msg.buttons[ButtonID.REVERSE]:
             self.seiton_msg.conveyer = -1.0
+        else:
+            self.seiton_msg.conveyer = 0.0
 
         if self.joy_msg.buttons[ButtonID.STOP]:
             self.seiton_msg.conveyer = 0.0
