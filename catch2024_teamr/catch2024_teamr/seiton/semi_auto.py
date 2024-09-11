@@ -75,6 +75,7 @@ class FullManual(Node):
         elif msg.color == 'norishio':
             self.boxes.data[msg.box_id].norishio += delta
         self.box_pub.publish(self.boxes)
+        self.calc_recom()
 
     def calc_recom(self):
         for color in ['ebishio', 'yuzushio', 'norishio']:
