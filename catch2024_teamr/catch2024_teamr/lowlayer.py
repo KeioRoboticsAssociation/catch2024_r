@@ -1,4 +1,5 @@
 from typing import Union
+from catch2024_teamr import seiton
 import rclpy
 from rclpy.node import Node
 from catch2024_teamr_msgs.msg import MainArm, Seiton
@@ -40,6 +41,8 @@ class MinarmLowLayer(Node):
         self.prev_mainarm_cmd: Union[MainArm, None] = None
         self.prev_seiton_cmd: Union[Seiton, None] = None
         self.initialized = False
+        self.seiton_timer = self.get_clock().now()
+        self.seiton_phase = False
 
         # pub, sub の初期化
         self.mainarm_sub = self.create_subscription(
@@ -47,7 +50,7 @@ class MinarmLowLayer(Node):
         self.mainarm_pub = self.create_publisher(
             MainArm, '/mainarm/status', 10)
         self.seiton_sub = self.create_subscription(
-            Seiton, "/seiton/pose", self.seiton_lowlayer_callback, 10)
+            Seiton, "/seiton/target_pose", self.seiton_lowlayer_callback, 10)
         self.seiton_pub = self.create_publisher(Seiton, "/seiton/status", 10)
         self.conveyer_sensor_pub = self.create_publisher(
             Bool, '/seiton/conveyer_sensor', 10)
@@ -124,6 +127,30 @@ class MinarmLowLayer(Node):
                 MOTOR_ELEV].input_vol = -0.05
             self.rogilink_pub.publish(self.rogilink_cmd)
 
+    def seiton_mode(self):
+        if self.prev_seiton_cmd is None:
+            return
+        if self.prev_seiton_cmd.mode == 0:
+            return
+
+        timer_sec = [math.inf, 0.3, math.inf, 0.8]
+        if ((self.get_clock().now() - self.seiton_timer).nanoseconds <
+                timer_sec[self.prev_seiton_cmd.mode]*1e9):
+            return
+
+        if self.prev_seiton_cmd.mode == 1:  # YURAYURA
+            self.rogidrive_send('Y', 1, Y_MAX_VEL, y_meter_to_rotate(
+                self.prev_seiton_cmd.y + (
+                    1 if self.seiton_phase else 0) * 0.01))
+
+        elif self.prev_seiton_cmd.mode == 3:  # PATAPATA
+            self.rogilink_cmd.servo[SERVO_FLIP].pulse_width_us = (
+                flip_bool_to_pulsewidth(
+                    self.seiton_phase ^ self.prev_seiton_cmd.flip))
+
+        self.seiton_phase = not self.seiton_phase
+        self.seiton_timer = self.get_clock().now()
+
     def rogilink_callback(self, msg: Status):
         self.rogilink_status = msg
 
@@ -139,6 +166,8 @@ class MinarmLowLayer(Node):
         if not self.initialized:
             self.initialize()
             return
+
+        self.seiton_mode()
 
         self.rogilink_pub.publish(self.rogilink_cmd)
         self.mainarm_pub.publish(create_mainarm_status_msg(
@@ -158,8 +187,8 @@ class MinarmLowLayer(Node):
         if abs(msg.theta - self.prev_mainarm_cmd.theta) > 1.5 * math.pi:
             self.get_logger().error('delta theta is too large')
             return
-        self.rogidrive_send('THETA', 1, THETA_MAX_VEL, theta_rad_to_rotate(
-            msg.theta))  # rad, 角度境界に注意
+        # self.rogidrive_send('THETA', 1, THETA_MAX_VEL, theta_rad_to_rotate(
+        #     msg.theta))  # rad, 角度境界に注意
         # self.rogidrive_send('R', 1, R_MAX_VEL,
         #                     r_meter_to_rotate(msg.r))  # 0 ~ 1m
         self.rogilink_cmd.motor[0].input_mode = (  # type: ignore
@@ -180,12 +209,16 @@ class MinarmLowLayer(Node):
     def seiton_lowlayer_callback(self, msg: Seiton):
         if not self.initialized:
             return
+        self.get_logger().info('convayer: %f, Y: %f' % (msg.conveyer, msg.y))
         self.rogidrive_send('Y', 1, Y_MAX_VEL, y_meter_to_rotate(msg.y))
-        self.rogidrive_send('CONVAYER', 1, CONVEYER_MAX_VEL,
-                            conveyer_count_to_rotate(msg.conveyer))
+        self.rogidrive_send('CONVEYER', 0, msg.conveyer * -0.9, 0.0)
         self.rogilink_cmd.servo[SERVO_FLIP].pulse_width_us = (  # type: ignore
             flip_bool_to_pulsewidth(
                 msg.flip))
+        if (self.prev_seiton_cmd is not None
+                and msg.mode != self.prev_seiton_cmd.mode):
+            self.seiton_timer = self.get_clock().now()
+            self.seiton_phase = False
         self.prev_seiton_cmd = msg
 
     def __del__(self):

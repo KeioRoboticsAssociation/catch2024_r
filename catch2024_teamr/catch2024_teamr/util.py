@@ -7,7 +7,8 @@ from catch2024_teamr_msgs.msg import MainArm, Seiton
 
 R_METER_TO_ROTATE_RATIO = 13.5
 CONVEYER_COUNT_TO_ROTATE_RATIO = -1.12
-Y_METER_TO_ROTATE_RATIO = 1
+Y_METER_TO_ROTATE_RATIO = 1 / (0.03501 * math.pi)
+Y_OFFSET = 0.606 - 0.07
 
 
 def theta_abs_to_count(theta: int, offset: float) -> int:
@@ -31,8 +32,8 @@ def handtheta_to_pulsewidth(handtheta: float) -> int:
     return int((handtheta + 1.57) / math.pi * 2000 + 500)
 
 
-def y_meter_to_rotate(count: float) -> float:
-    return count * Y_METER_TO_ROTATE_RATIO
+def y_meter_to_rotate(meter: float) -> float:
+    return (meter + Y_OFFSET) * Y_METER_TO_ROTATE_RATIO
 
 
 def conveyer_count_to_rotate(count: int) -> float:
@@ -41,9 +42,9 @@ def conveyer_count_to_rotate(count: int) -> float:
 
 def flip_bool_to_pulsewidth(flip: bool) -> int:
     if flip:
-        return 2000
+        return 1930
     else:
-        return 1000
+        return 1100
 
 
 def lift_to_rotate(lift: float) -> float:
@@ -80,7 +81,7 @@ def create_seiton_status_msg(rogilink: Status,
         elif i.name == 'CONVEYER':
             conveyer = i
 
-    msg.y = y.pos / Y_METER_TO_ROTATE_RATIO
+    msg.y = y.pos / Y_METER_TO_ROTATE_RATIO - Y_OFFSET
     msg.conveyer = conveyer.pos / CONVEYER_COUNT_TO_ROTATE_RATIO
 
     return msg
