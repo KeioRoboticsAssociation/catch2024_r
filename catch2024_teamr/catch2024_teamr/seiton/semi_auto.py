@@ -154,15 +154,15 @@ class FullManual(Node):
 
     def calc_recom(self):
         for i in range(6):
-            if self.boxes.data[i].ebishio < 3:
+            if self.boxes.data[i].ebishio < 3 and self.boxes.data[i].yuzushio <= 3 and self.boxes.data[i].norishio <= 3:
                 self.recom_id.data[0] = i
                 break
         for i in range(6):
-            if self.boxes.data[i].yuzushio < 3:
+            if self.boxes.data[i].yuzushio < 3 and self.boxes.data[i].norishio <= 3 and self.boxes.data[i].ebishio <= 3:
                 self.recom_id.data[1] = i
                 break 
         for i in range(6):
-            if self.boxes.data[i].norishio< 3:
+            if self.boxes.data[i].norishio< 3 and self.boxes.data[i].ebishio <= 3 and self.boxes.data[i].yuzushio <= 3:
                 self.recom_id.data[2] = i
                 break
         self.recom_pub.publish(self.recom_id)
