@@ -69,7 +69,7 @@ class FullManual(Node):
         self.joy_msg.buttons = [0]*18
         self.previous_joy_msg = self.joy_msg
 
-        self.seiton_msg.y = 0.0
+        self.seiton_msg.y = -0.05393
         self.seiton_msg.mode = 0
         self.seiton_msg.conveyer = 0.0
         self.seiton_msg.flip = False
@@ -134,7 +134,6 @@ class FullManual(Node):
 
         self.pose_pub.publish(self.seiton_msg)
 
-
     def gui_callback(self, msg):
         delta = 1 if msg.plusminus else -1
         if msg.color == 'ebishio':
@@ -160,9 +159,9 @@ class FullManual(Node):
         for i in range(6):
             if self.boxes.data[i].yuzushio < 3 and self.boxes.data[i].norishio <= 3 and self.boxes.data[i].ebishio <= 3:
                 self.recom_id.data[1] = i
-                break 
+                break
         for i in range(6):
-            if self.boxes.data[i].norishio< 3 and self.boxes.data[i].ebishio <= 3 and self.boxes.data[i].yuzushio <= 3:
+            if self.boxes.data[i].norishio < 3 and self.boxes.data[i].ebishio <= 3 and self.boxes.data[i].yuzushio <= 3:
                 self.recom_id.data[2] = i
                 break
         self.recom_pub.publish(self.recom_id)

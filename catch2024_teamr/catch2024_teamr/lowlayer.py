@@ -133,7 +133,7 @@ class MinarmLowLayer(Node):
         if self.prev_seiton_cmd.mode == 0:
             return
 
-        timer_sec = [math.inf, 0.3, math.inf, 0.8]
+        timer_sec = [math.inf, 0.2, math.inf, 0.5]
         if ((self.get_clock().now() - self.seiton_timer).nanoseconds <
                 timer_sec[self.prev_seiton_cmd.mode]*1e9):
             return
@@ -145,8 +145,8 @@ class MinarmLowLayer(Node):
 
         elif self.prev_seiton_cmd.mode == 3:  # PATAPATA
             self.rogilink_cmd.servo[SERVO_FLIP].pulse_width_us = (
-                flip_bool_to_pulsewidth(
-                    self.seiton_phase ^ self.prev_seiton_cmd.flip))
+                1930 if (self.seiton_phase ^ self.prev_seiton_cmd.flip
+                         ) else 1830)
 
         self.seiton_phase = not self.seiton_phase
         self.seiton_timer = self.get_clock().now()
