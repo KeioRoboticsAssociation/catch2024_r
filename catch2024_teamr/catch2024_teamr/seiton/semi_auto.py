@@ -46,12 +46,12 @@ class FullManual(Node):
 
         self.joy_msg = Joy()
         self.joy_msg.axes = [0.0]*8
-        self.joy_msg.buttons = [0]*12
+        self.joy_msg.buttons = [0]*18
         self.previous_joy_msg = self.joy_msg
 
         self.seiton_msg.y = 0.0
         self.seiton_msg.mode = 0
-        self.seiton_msg.conveyer = 0
+        self.seiton_msg.conveyer = 0.0
         self.seiton_msg.flip = False
 
         self.cartesian_xy = [0, 0]
