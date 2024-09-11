@@ -12,10 +12,14 @@ from ..config.mode import Mode
 class FullManual(Node):
     def __init__(self):
         super().__init__('full_manual')
-        self.pose_pub = self.create_publisher(Seiton, '/seiton/target_pose', 10)
-        self.gui_sub = self.create_subscription(SeitonGUI, '/seiton/gui', self.gui_callback, 10)
-        self.box_pub = self.create_publisher(BoxStatusMultiArray, '/seiton/box_status', 10)
-        self.recom_pub = self.create_publisher(Int8MultiArray, '/seiton/recommendation', 10)
+        self.pose_pub = self.create_publisher(
+            Seiton, '/seiton/target_pose', 10)
+        self.gui_sub = self.create_subscription(
+            SeitonGUI, '/seiton/gui', self.gui_callback, 10)
+        self.box_pub = self.create_publisher(
+            BoxStatusMultiArray, '/seiton/box_status', 10)
+        self.recom_pub = self.create_publisher(
+            Int8MultiArray, '/seiton/recommendation', 10)
 
         self.joy_sub = self.create_subscription(
             Joy, '/seiton/joy', self.joy_callback, 5)
@@ -39,16 +43,16 @@ class FullManual(Node):
         self.boxes.data = [BoxStatus() for _ in range(6)]
 
         self.recom_id = Int8MultiArray()
-        self.recom_id.data = [0,0,0]
+        self.recom_id.data = [0, 0, 0]
 
     def joy_callback(self, msg):
         self.joy_msg = msg
 
     def gui_callback(self, msg):
         if msg.plusminus == False:
-            self.boxes.data[msg.boxID][msg.color] -= 1
+            self.boxes.data[msg.box_id][msg.color] -= 1
         elif msg.plusminus == True:
-            self.boxes.data[msg.boxID][msg.color] += 1
+            self.boxes.data[msg.box_id][msg.color] += 1
         self.box_pub.publish(self.boxes)
 
     def calc_recom(self):
@@ -61,22 +65,22 @@ class FullManual(Node):
 
     def timer_callback(self):
         if self.joy_msg.buttons[0]:
-            self.y += 0.05
+            self.seiton_msg.y += 0.05
 
         if self.joy_msg.buttons[1]:
-            self.y += 0.01
+            self.seiton_msg.y += 0.01
 
         if self.joy_msg.buttons[2]:
-            self.y += 0.005
-        
+            self.seiton_msg.y += 0.005
+
         if self.joy_msg.buttons[3]:
-            self.y -= 0.005
-        
+            self.seiton_msg.y -= 0.005
+
         if self.joy_msg.buttons[4]:
-            self.y -= 0.01
+            self.seiton_msg.y -= 0.01
 
         if self.joy_msg.buttons[5]:
-            self.y -= 0.05
+            self.seiton_msg.y -= 0.05
 
         if self.joy_msg.buttons[6]:
             self.seiton_msg.mode = YURAYURA
@@ -92,15 +96,14 @@ class FullManual(Node):
 
         if self.joy_msg.buttons[10]:
             self.seiton_msg.flip = False
-        
+
         if self.joy_msg.buttons[11]:
             self.seiton_msg.conveyer += 1
-        
+
         if self.joy_msg.buttons[12]:
             self.seiton_msg.conveyer -= 1
 
-
-        self.pose_pub.publish(self.mainarm_msg)
+        self.pose_pub.publish(self.seiton_msg)
         self.previous_joy_msg = self.joy_msg
 
     def __del__(self):

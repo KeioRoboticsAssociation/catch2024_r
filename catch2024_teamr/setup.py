@@ -27,6 +27,8 @@ setup(
             'lowlayer = catch2024_teamr.lowlayer:main',
             'mainarm_full_manual = catch2024_teamr.mainarm.full_manual:main',
             'mainarm_semi_auto = catch2024_teamr.mainarm.semi_auto:main',
+            'seiton_full_manual = catch2024_teamr.seiton.full_manual:main',
+            'seiton_semi_auto = catch2024_teamr.seiton.semi_auto:main',
         ],
     },
 )
