@@ -17,6 +17,7 @@ INDEX_Y_POS = [
     1.0
 ]
 
+
 class FullManual(Node):
     def __init__(self):
         super().__init__('full_manual')
@@ -59,7 +60,7 @@ class FullManual(Node):
         self.boxes.data = [BoxStatus() for _ in range(6)]
 
         self.recom_id = Int8MultiArray()
-        self.recom_id.data = [0,0,0]
+        self.recom_id.data = [0, 0, 0]
 
         self.index = 0
 
@@ -80,10 +81,17 @@ class FullManual(Node):
     def calc_recom(self):
         for color in ['ebishio', 'yuzushio', 'norishio']:
             for i in range(6):
-                if self.boxes.data[i][color] < 3:
+                if self.boxes.data[i].ebishio < 3:
                     self.recom_id.data = i
                     break
-        self.recom_pub.publish(self.recom_id)
+            for i in range(6):
+                if self.boxes.data[i].ebishio < 3:
+                    self.recom_id.data = i
+                    break self.recom_pub.publish(self.recom_id)
+            for i in range(6):
+                if self.boxes.data[i].ebishio < 3:
+                    self.recom_id.data = i
+                    break
 
     def index_callback(self, msg):
         self.get_logger().info('index: %d' % msg.data)
@@ -93,7 +101,6 @@ class FullManual(Node):
         self.seiton_msg.flip = self.index % 2
 
         self.pose_pub.publish(self.seiton_msg)
-
 
     def timer_callback(self):
         if self.joy_msg.buttons[0]:
@@ -106,10 +113,10 @@ class FullManual(Node):
 
         if self.joy_msg.buttons[2]:
             self.seiton_msg.y += 0.005
-        
+
         if self.joy_msg.buttons[3]:
             self.seiton_msg.y -= 0.005
-        
+
         if self.joy_msg.buttons[4]:
             self.seiton_msg.y -= 0.01
             self.seiton_msg.y -= 0.01
@@ -135,7 +142,7 @@ class FullManual(Node):
 
         if self.joy_msg.buttons[11]:
             self.seiton_msg.conveyer = 1
-        
+
         if self.joy_msg.buttons[12]:
             self.seiton_msg.conveyer = -1
 
