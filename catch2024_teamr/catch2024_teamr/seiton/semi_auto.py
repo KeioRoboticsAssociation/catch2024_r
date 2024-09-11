@@ -23,6 +23,7 @@ class ButtonID(IntEnum):
     FORWARD = 11
     REVERSE = 12
     DEFAULT = 13
+    STOP = 14
 
 
 INDEX_Y_POS = [
@@ -121,11 +122,13 @@ class FullManual(Node):
         if self.joy_msg.buttons[ButtonID.DEFAULT]:
             self.seiton_msg.mode = Mode.DEFAULT
 
-        if self.joy_msg.buttons[ButtonID.FORWARD] and not self.joy_msg.buttons[ButtonID.REVERSE]:
+        if self.joy_msg.buttons[ButtonID.FORWARD]:
             self.seiton_msg.conveyer = 1.0
-        elif not self.joy_msg.buttons[ButtonID.FORWARD] and self.joy_msg.buttons[ButtonID.REVERSE]:
+        
+        if self.joy_msg.buttons[ButtonID.REVERSE]:
             self.seiton_msg.conveyer = -1.0
-        else:
+
+        if self.joy_msg.buttons[ButtonID.STOP]:
             self.seiton_msg.conveyer = 0.0
 
         self.pose_pub.publish(self.seiton_msg)
