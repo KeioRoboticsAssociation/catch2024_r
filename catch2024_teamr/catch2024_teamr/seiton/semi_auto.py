@@ -23,6 +23,14 @@ class FullManual(Node):
 
         self.joy_sub = self.create_subscription(
             Joy, '/seiton/joy', self.joy_callback, 5)
+
+        # hoge = [BoxStatus(ebishio=0 + 3 * i, yuzushio=1 + 3 *
+        #                   i, norishio=2 + 3 * i) for i in range(6)]
+        # self.box_pub.publish(BoxStatusMultiArray(data=hoge))
+
+        # hoge = Int8MultiArray(data=[2, 2, 2])
+        # self.recom_pub.publish(hoge)
+
         self.get_logger().info('full_manual has been started')
         self.seiton_msg = Seiton()
         self.tmr = self.create_timer(0.01, self.timer_callback)
@@ -49,10 +57,13 @@ class FullManual(Node):
         self.joy_msg = msg
 
     def gui_callback(self, msg):
-        if msg.plusminus == False:
-            self.boxes.data[msg.box_id][msg.color] -= 1
-        elif msg.plusminus == True:
-            self.boxes.data[msg.box_id][msg.color] += 1
+        delta = 1 if msg.plusminus else -1
+        if msg.color == 'ebishio':
+            self.boxes.data[msg.box_id].ebishio += delta
+        elif msg.color == 'yuzushio':
+            self.boxes.data[msg.box_id].yuzushio += delta
+        elif msg.color == 'norishio':
+            self.boxes.data[msg.box_id].norishio += delta
         self.box_pub.publish(self.boxes)
 
     def calc_recom(self):
