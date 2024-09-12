@@ -18,6 +18,7 @@ from .util import flip_bool_to_pulsewidth, create_seiton_status_msg
 LIMIT_ELEV_LOWER = 15
 LIMIT_CONVEYER_SENSOR = 0
 SERVO_HAND_THETA = 0
+SERVO_CATCH = 1
 SERVO_FLIP = 4
 MOTOR_ELEV = 0
 
@@ -187,10 +188,10 @@ class MinarmLowLayer(Node):
         if abs(msg.theta - self.prev_mainarm_cmd.theta) > 1.5 * math.pi:
             self.get_logger().error('delta theta is too large')
             return
-        # self.rogidrive_send('THETA', 1, THETA_MAX_VEL, theta_rad_to_rotate(
-        #     msg.theta))  # rad, 角度境界に注意
-        # self.rogidrive_send('R', 1, R_MAX_VEL,
-        #                     r_meter_to_rotate(msg.r))  # 0 ~ 1m
+        self.rogidrive_send('THETA', 1, THETA_MAX_VEL, theta_rad_to_rotate(
+            msg.theta))  # rad, 角度境界に注意
+        self.rogidrive_send('R', 1, R_MAX_VEL,
+                            r_meter_to_rotate(msg.r))  # 0 ~ 1m
         self.rogilink_cmd.motor[0].input_mode = (  # type: ignore
             MotorCommand.COMMAND_POS)
         if msg.lift < 0.0:

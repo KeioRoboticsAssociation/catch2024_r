@@ -1,14 +1,13 @@
 {
   "motors": {
-    // "THETA": {
-    //   "serial": "346A31693432",
-    //   "axis": 0
-    // },
-    // "R": {
-    //   "serial": "346A31693432",
-    //   "axis": 1
-    // }
-    // ,
+    "THETA": {
+      "serial": "346A31693432",
+      "axis": 0
+    },
+    "R": {
+      "serial": "346A31693432",
+      "axis": 1
+    },
     "CONVEYER": {
       "serial": "3388377D3433",
       "axis": 0
