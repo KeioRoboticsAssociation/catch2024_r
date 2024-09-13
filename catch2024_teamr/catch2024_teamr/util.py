@@ -12,12 +12,12 @@ Y_OFFSET = 0.606 - 0.07
 
 
 def theta_abs_to_count(theta: int, offset: float) -> int:
-    if theta - offset > 1536:
-        return int(float(theta - offset - 2048) /
-                   2048 * 30 * 8192)
+    if theta - offset > 3072:
+        return int(float(theta - offset - 4096) /
+                   4096 * 30 * 8192)
     else:
         return int(float(theta - offset) /
-                   2048 * 30 * 8192)
+                   4096 * 30 * 8192)
 
 
 def theta_rad_to_rotate(theta: float) -> float:
