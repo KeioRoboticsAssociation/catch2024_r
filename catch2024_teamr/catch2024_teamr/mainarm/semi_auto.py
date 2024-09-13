@@ -13,8 +13,10 @@ import csv
 class SemiAuto(Node):
     def __init__(self):
         super().__init__('semi_auto')
-        self.pose_pub = self.create_publisher(MainArm, '/mainarm/target_pose', 10)
-        self.pose_sub = self.create_subscription(MainArm, '/mainarm/status', self.pose_callback, 5)
+        self.pose_pub = self.create_publisher(
+            MainArm, '/mainarm/target_pose', 10)
+        self.pose_sub = self.create_subscription(
+            MainArm, '/mainarm/status', self.pose_callback, 5)
         self.pose_status = MainArm()
 
         def load_index_csv(file_path):
@@ -36,7 +38,6 @@ class SemiAuto(Node):
             Int8, '/index', self.index_callback, 5)
         self.seiton_sub = self.create_subscription(
             Seiton, '/seiton/target_pose', self.seiton_callback, 5)
-
 
         self.seiton_msg = Seiton()
 
@@ -136,7 +137,7 @@ class SemiAuto(Node):
 
         if self.state == States.GO_TARGET:
             self.get_logger().info('GO_TARGET')
-            
+
             # 目標値のrtz座標
             rtz = self.rtz_to_xyz(self.index_data[self.index])
             # rだけ先に更新
@@ -144,7 +145,7 @@ class SemiAuto(Node):
             # rが目標値に近づくまで待つ
             while abs(self.pose_status.r - rtz[0]) > 0.2:
                 rclpy.spin_once(self)
-            
+
             # θも更新
             self.send_target_rtz([rtz[0], rtz[1], 0])
 
@@ -160,7 +161,7 @@ class SemiAuto(Node):
 
         if self.state == States.GO_SHOOT:
             self.get_logger().info('GO_SHOOT')
-            
+
             self.send_target_xyz([0.253, self.seiton_msg.y, 1])
             self.wait_for_button(Buttons.START)
             self.set_state(States.SHOOT)

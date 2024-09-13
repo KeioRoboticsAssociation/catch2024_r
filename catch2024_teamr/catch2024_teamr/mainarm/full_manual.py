@@ -25,6 +25,8 @@ class FullManual(Node):
 
         self.cartesian_xy = [0, 0]
 
+        self.mainarm_msg.lift = 1.0
+
     def joy_callback(self, msg):
         self.joy_msg = msg
 

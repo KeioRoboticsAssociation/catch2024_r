@@ -32,6 +32,17 @@ def handtheta_to_pulsewidth(handtheta: float) -> int:
     return int((handtheta + 1.57) / math.pi * 2000 + 500)
 
 
+def hand_to_pulsewidth(hand: int) -> int:
+    if hand == 1:
+        return 2050
+    else:
+        return 1000
+
+
+def phi_to_pulsewidth():
+    pass
+
+
 def y_meter_to_rotate(meter: float) -> float:
     return (meter + Y_OFFSET) * Y_METER_TO_ROTATE_RATIO
 

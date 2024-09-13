@@ -13,13 +13,15 @@ from .util import handtheta_to_pulsewidth, lift_to_rotate, r_meter_to_rotate, y_
 from .util import theta_abs_to_count, theta_rad_to_rotate
 from .util import create_mainarm_status_msg, conveyer_count_to_rotate
 from .util import flip_bool_to_pulsewidth, create_seiton_status_msg
+from .util import hand_to_pulsewidth
 # 昇降DC, r ブラシレス, θ ブラシレス, ハンド サーボ1, サーボ2, サーボ3，開ループDC
 
 LIMIT_ELEV_LOWER = 15
 LIMIT_CONVEYER_SENSOR = 0
-SERVO_HAND_THETA = 0
-SERVO_CATCH = 1
+SERVO_HAND = 0
+SERVP_PHI = 1
 SERVO_FLIP = 4
+SERVO_HAND_THETA = 5
 MOTOR_ELEV = 0
 
 ABS_OFFSET = 30.0
@@ -125,7 +127,7 @@ class MinarmLowLayer(Node):
             self.rogilink_cmd.motor[  # type: ignore
                 MOTOR_ELEV].input_mode = (MotorCommand.COMMAND_VOL)
             self.rogilink_cmd.motor[  # type: ignore
-                MOTOR_ELEV].input_vol = -0.05
+                MOTOR_ELEV].input_vol = 0.05
             self.rogilink_pub.publish(self.rogilink_cmd)
 
     def seiton_mode(self):
@@ -205,6 +207,9 @@ class MinarmLowLayer(Node):
         self.rogilink_cmd.servo[  # type: ignore
             SERVO_HAND_THETA].pulse_width_us = (
                 handtheta_to_pulsewidth(msg.handtheta))
+        self.rogilink_cmd[SERVO_HAND].pulse_width_us = (  # type: ignore
+            hand_to_pulsewidth(msg.hand))
+
         self.prev_mainarm_cmd = msg
 
     def seiton_lowlayer_callback(self, msg: Seiton):
