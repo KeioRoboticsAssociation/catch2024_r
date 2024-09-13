@@ -33,14 +33,21 @@ def handtheta_to_pulsewidth(handtheta: float) -> int:
 
 
 def hand_to_pulsewidth(hand: int) -> int:
+    if hand == 0:
+        return 1000
     if hand == 1:
         return 2050
     else:
-        return 1000
+        return 1800
 
 
-def phi_to_pulsewidth():
-    pass
+def phi_to_pulsewidth(phi: int) -> int:
+    if phi == 0:
+        return 1500
+    elif phi == 1:
+        return 500
+    else:
+        return 2400
 
 
 def y_meter_to_rotate(meter: float) -> float:

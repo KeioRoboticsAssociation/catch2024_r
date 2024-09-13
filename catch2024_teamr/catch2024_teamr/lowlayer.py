@@ -211,6 +211,8 @@ class MinarmLowLayer(Node):
                 handtheta_to_pulsewidth(msg.handtheta))
         self.rogilink_cmd.servo[SERVO_HAND].pulse_width_us = (  # type: ignore
             hand_to_pulsewidth(msg.hand))
+        self.rogilink_cmd.servo[SERVO_PHI].pulse_width_us = (  # type: ignore
+            hand_to_pulsewidth(msg.phi))
 
         self.prev_mainarm_cmd = msg
 
