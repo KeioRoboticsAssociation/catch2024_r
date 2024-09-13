@@ -97,10 +97,10 @@ class FullManual(Node):
             self.mainarm_msg.hand = 0
 
         if self.joy_msg.buttons[Buttons.X]:
-            self.mainarm_msg.roller = True
+            self.mainarm_msg.phi = True
 
         if self.joy_msg.buttons[Buttons.Y]:
-            self.mainarm_msg.roller = False
+            self.mainarm_msg.phi = False
 
         if self.joy_msg.buttons[Buttons.HOME] != self.previous_joy_msg.buttons[Buttons.HOME] and self.joy_msg.buttons[Buttons.HOME]:
             self.coordinate_mode = not self.coordinate_mode

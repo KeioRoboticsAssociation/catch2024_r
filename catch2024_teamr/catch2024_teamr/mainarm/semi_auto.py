@@ -10,6 +10,8 @@ from std_msgs.msg import Int8
 import csv
 
 
+
+
 class SemiAuto(Node):
     def __init__(self):
         super().__init__('semi_auto')
@@ -18,6 +20,8 @@ class SemiAuto(Node):
         self.pose_sub = self.create_subscription(
             MainArm, '/mainarm/status', self.pose_callback, 5)
         self.pose_status = MainArm()
+
+        self.field_color = self.get_field_color()
 
         def load_index_csv(file_path):
             index_data = []
@@ -62,8 +66,13 @@ class SemiAuto(Node):
             self.loop()
             self.sleep_ms(1)
 
+    def get_field_color(self):
+        self.declare_parameter('field_color', 'blue')
+        field_color = self.get_parameter('field_color').value
+        return field_color   
+
     def joy_callback(self, msg):
-        self.joy_msg = msg
+            self.joy_msg = msg
 
     def sleep_ms(self, ms):
         current_time = time.time()
@@ -92,8 +101,8 @@ class SemiAuto(Node):
         self.mainarm_msg.lift = rtz[2]
         self.pose_pub.publish(self.mainarm_msg)
 
-    def rtz_to_xyz(self, rtz):
-        return [rtz[0]*math.cos(rtz[1]), rtz[0]*math.sin(rtz[1]), rtz[2]]
+    def xyz_to_rtz(self, xyz):
+        return [math.sqrt(xyz[0]**2 + xyz[1]**2), math.atan2(xyz[1], xyz[0]) if not (-math.pi/2 > math.atan2(xyz[1], xyz[0]) > -math.pi) else (math.atan2(xyz[1], xyz[0]) + 2*math.pi), xyz[2]]
 
     def index_callback(self, msg):
         self.index = msg.data
@@ -114,47 +123,70 @@ class SemiAuto(Node):
                 return
 
     def catch(self):
-        self.mainarm_msg.lift = 0.0
-        self.sleep_ms(1000)
+        self.get_logger().info('state: %s, catch' % self.state)
+        # self.sleep_ms(1000)
         self.mainarm_msg.hand = 1
         self.pose_pub.publish(self.mainarm_msg)
 
     def release(self):
-        self.mainarm_msg.lift = 1.0
-        self.mainarm_msg.roller = True
+        self.get_logger().info('state: %s, release' % self.state)
+        self.mainarm_msg.lift = 1.0 # TODO 現物合わせ
+        self.mainarm_msg.handtheta = 0
+        self.pose_pub.publish(self.mainarm_msg)
+
+        if self.field_color == 'blue':
+            self.mainarm_msg.phi = 1
+        else:
+            self.mainarm_msg.phi = -1
         self.sleep_ms(1000)
+        self.mainarm_msg.hand = 2
+        self.mainarm_msg.phi = False
+        self.pose_pub.publish(self.mainarm_msg)
+
+    def full_open(self):
+        self.get_logger().info('state: %s, full_open' % self.state)
         self.mainarm_msg.hand = 0
-        self.mainarm_msg.roller = False
+        self.mainarm_msg.phi = 0
         self.pose_pub.publish(self.mainarm_msg)
 
     def loop(self):
         self.set_state(States.INIT)
         if self.state == States.INIT:
             self.get_logger().info('INIT')
-            self.send_target_xyz([0.5, 0, 1])
+            if self.field_color == 'blue':
+                self.send_target_xyz([0.5, 0, 1])
+            else:
+                self.send_target_xyz([-0.5, 0, 1])
             self.wait_for_button(Buttons.START)
             self.set_state(States.GO_TARGET)
 
         if self.state == States.GO_TARGET:
             self.get_logger().info('GO_TARGET')
+            self.full_open()
 
             # 目標値のrtz座標
-            rtz = self.rtz_to_xyz(self.index_data[self.index])
+            rtz = self.xyz_to_rtz(self.index_data[self.index])
             # rだけ先に更新
-            self.send_target_rtz([rtz[0], self.pose_status.theta, 0])
+            self.send_target_rtz([rtz[0], self.pose_status.theta, 0.5])
             # rが目標値に近づくまで待つ
             while abs(self.pose_status.r - rtz[0]) > 0.2:
                 rclpy.spin_once(self)
 
             # θも更新
-            self.send_target_rtz([rtz[0], rtz[1], 0])
+            self.send_target_rtz([rtz[0], rtz[1], 0.5])
 
             # self.send_target_xyz(self.index_data[self.index])
+            self.wait_for_button(Buttons.START)
+            # 下げる
+            self.mainarm_msg.lift = 0.0
+            self.pose_pub.publish(self.mainarm_msg)
+
             self.wait_for_button(Buttons.START)
             self.set_state(States.CATCH)
 
         if self.state == States.CATCH:
             self.get_logger().info('CATCH')
+    
             self.catch()
             self.wait_for_button(Buttons.START)
             self.set_state(States.GO_SHOOT)
@@ -162,7 +194,28 @@ class SemiAuto(Node):
         if self.state == States.GO_SHOOT:
             self.get_logger().info('GO_SHOOT')
 
-            self.send_target_xyz([0.253, self.seiton_msg.y, 1])
+
+            # 目標値のrtz座標
+            if self.field_color == 'blue':
+                rtz = self.xyz_to_rtz([0.253, self.seiton_msg.y, 1])
+            else:
+                rtz = self.xyz_to_rtz([-0.253, self.seiton_msg.y, 1])
+
+            # rだけ先に更新
+            self.send_target_rtz([rtz[0], self.pose_status.theta, 0.5])
+            # rが目標値に近づくまで待つ
+            while abs(self.pose_status.r - rtz[0]) > 0.2:
+                rclpy.spin_once(self)
+
+            # θも更新
+            self.send_target_rtz([rtz[0], rtz[1], 1])
+            
+
+            if self.field_color == 'blue':
+                self.send_target_xyz([0.253, self.seiton_msg.y, 1])
+            else:
+                self.send_target_xyz([-0.253, self.seiton_msg.y, 1])
+
             self.wait_for_button(Buttons.START)
             self.set_state(States.SHOOT)
 
@@ -170,6 +223,9 @@ class SemiAuto(Node):
             self.get_logger().info('SHOOT')
             self.release()
             self.wait_for_button(Buttons.START)
+            self.mainarm_msg.hand = 0
+            self.mainarm_msg.phi = 0
+            self.pose_pub.publish(self.mainarm_msg)
             self.set_state(States.GO_TARGET)
 
         if self.state == States.END:
@@ -255,10 +311,13 @@ class SemiAuto(Node):
             self.mainarm_msg.hand = 0
 
         if self.joy_msg.buttons[Buttons.X]:
-            self.mainarm_msg.roller = True
+            if self.field_color == 'blue':
+                self.mainarm_msg.phi = 1
+            else:
+                self.mainarm_msg.phi = -1
 
         if self.joy_msg.buttons[Buttons.Y]:
-            self.mainarm_msg.roller = False
+            self.mainarm_msg.phi = 0
 
         if (self.joy_msg.buttons[Buttons.HOME] !=
                 self.previous_joy_msg.buttons[Buttons.HOME]
