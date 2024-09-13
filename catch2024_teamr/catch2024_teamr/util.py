@@ -29,7 +29,7 @@ def r_meter_to_rotate(r: float) -> float:
 
 
 def handtheta_to_pulsewidth(handtheta: float) -> int:
-    return int((handtheta + 1.57) / math.pi * 2000 + 500)
+    return int((handtheta + 1.57) / math.pi * 1720 + 700)
 
 
 def hand_to_pulsewidth(hand: int) -> int:
