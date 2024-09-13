@@ -119,8 +119,10 @@ class MinarmLowLayer(Node):
             self.rogidrive_set_count.publish(
                 RogidriveSetCount(name='CONVEYER', count=0)
             )
+            self.rogidrive_send('THETA', 1, 5.0, 0.0)
             time.sleep(0.1)
             self.rogidrive_enable.publish(Bool(data=True))
+            self.rogilink_cmd.motor[0].input_vol = 0.0
         else:
             # 昇降を下限まで下げる
             self.get_logger().info('Initializing...')
@@ -207,7 +209,7 @@ class MinarmLowLayer(Node):
         self.rogilink_cmd.servo[  # type: ignore
             SERVO_HAND_THETA].pulse_width_us = (
                 handtheta_to_pulsewidth(msg.handtheta))
-        self.rogilink_cmd[SERVO_HAND].pulse_width_us = (  # type: ignore
+        self.rogilink_cmd.servo[SERVO_HAND].pulse_width_us = (  # type: ignore
             hand_to_pulsewidth(msg.hand))
 
         self.prev_mainarm_cmd = msg
