@@ -89,10 +89,10 @@ class FullManual(Node):
             self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
 
         if self.joy_msg.buttons[Buttons.B]:
-            self.mainarm_msg.hand = True
+            self.mainarm_msg.hand = 1
 
         if self.joy_msg.buttons[Buttons.A]:
-            self.mainarm_msg.hand = False
+            self.mainarm_msg.hand = 0
 
         if self.joy_msg.buttons[Buttons.X]:
             self.mainarm_msg.roller = True

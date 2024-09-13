@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from catch2024_teamr_msgs.msg import MainArm
+from catch2024_teamr_msgs.msg import MainArm, Seiton
 from sensor_msgs.msg import Joy
 import math
 import time
@@ -13,8 +13,9 @@ import csv
 class SemiAuto(Node):
     def __init__(self):
         super().__init__('semi_auto')
-        self.pose_pub = self.create_publisher(
-            MainArm, '/mainarm/target_pose', 10)
+        self.pose_pub = self.create_publisher(MainArm, '/mainarm/target_pose', 10)
+        self.pose_sub = self.create_subscription(MainArm, '/mainarm/status', self.pose_callback, 5)
+        self.pose_status = MainArm()
 
         def load_index_csv(file_path):
             index_data = []
@@ -33,6 +34,11 @@ class SemiAuto(Node):
         self.state_pub = self.create_publisher(Int8, '/mainarm/state', 10)
         self.index_sub = self.create_subscription(
             Int8, '/index', self.index_callback, 5)
+        self.seiton_sub = self.create_subscription(
+            Seiton, '/seiton/target_pose', self.seiton_callback, 5)
+
+
+        self.seiton_msg = Seiton()
 
         self.state = 0
         self.joy_sub = self.create_subscription(
@@ -67,7 +73,7 @@ class SemiAuto(Node):
         self.state = state
         self.state_pub.publish(Int8(data=state))
 
-    def send_target(self, xyz):
+    def send_target_xyz(self, xyz):
         self.cartesian_xy = [xyz[0], xyz[1]]
         self.mainarm_msg.r = math.sqrt(xyz[0]**2 + xyz[1]**2)
         self.mainarm_msg.theta = (
@@ -78,9 +84,25 @@ class SemiAuto(Node):
         self.lift = xyz[2]
         self.pose_pub.publish(self.mainarm_msg)
 
+    def send_target_rtz(self, rtz):
+        self.mainarm_msg.r = rtz[0]
+        self.mainarm_msg.theta = rtz[1]
+        self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
+        self.mainarm_msg.lift = rtz[2]
+        self.pose_pub.publish(self.mainarm_msg)
+
+    def rtz_to_xyz(self, rtz):
+        return [rtz[0]*math.cos(rtz[1]), rtz[0]*math.sin(rtz[1]), rtz[2]]
+
     def index_callback(self, msg):
         self.index = msg.data
         self.get_logger().info('index: %d' % self.index)
+
+    def seiton_callback(self, msg):
+        self.seiton_msg = msg
+
+    def pose_callback(self, msg):
+        self.pose_status = msg
 
     def wait_for_button(self, button):
         while True:
@@ -93,14 +115,14 @@ class SemiAuto(Node):
     def catch(self):
         self.mainarm_msg.lift = 0.0
         self.sleep_ms(1000)
-        self.mainarm_msg.hand = True
+        self.mainarm_msg.hand = 1
         self.pose_pub.publish(self.mainarm_msg)
 
     def release(self):
         self.mainarm_msg.lift = 1.0
         self.mainarm_msg.roller = True
         self.sleep_ms(1000)
-        self.mainarm_msg.hand = False
+        self.mainarm_msg.hand = 0
         self.mainarm_msg.roller = False
         self.pose_pub.publish(self.mainarm_msg)
 
@@ -108,13 +130,25 @@ class SemiAuto(Node):
         self.set_state(States.INIT)
         if self.state == States.INIT:
             self.get_logger().info('INIT')
-            self.send_target([0.5, 0, 1])
+            self.send_target_xyz([0.5, 0, 1])
             self.wait_for_button(Buttons.START)
             self.set_state(States.GO_TARGET)
 
         if self.state == States.GO_TARGET:
             self.get_logger().info('GO_TARGET')
-            self.send_target(self.index_data[self.index])
+            
+            # 目標値のrtz座標
+            rtz = self.rtz_to_xyz(self.index_data[self.index])
+            # rだけ先に更新
+            self.send_target_rtz([rtz[0], self.pose_status.theta, 0])
+            # rが目標値に近づくまで待つ
+            while abs(self.pose_status.r - rtz[0]) > 0.2:
+                rclpy.spin_once(self)
+            
+            # θも更新
+            self.send_target_rtz([rtz[0], rtz[1], 0])
+
+            # self.send_target_xyz(self.index_data[self.index])
             self.wait_for_button(Buttons.START)
             self.set_state(States.CATCH)
 
@@ -126,7 +160,8 @@ class SemiAuto(Node):
 
         if self.state == States.GO_SHOOT:
             self.get_logger().info('GO_SHOOT')
-            self.send_target([0.5, 0, 1])
+            
+            self.send_target_xyz([0.253, self.seiton_msg.y, 1])
             self.wait_for_button(Buttons.START)
             self.set_state(States.SHOOT)
 
@@ -213,10 +248,10 @@ class SemiAuto(Node):
             self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
 
         if self.joy_msg.buttons[Buttons.B]:
-            self.mainarm_msg.hand = True
+            self.mainarm_msg.hand = 1
 
         if self.joy_msg.buttons[Buttons.A]:
-            self.mainarm_msg.hand = False
+            self.mainarm_msg.hand = 0
 
         if self.joy_msg.buttons[Buttons.X]:
             self.mainarm_msg.roller = True
