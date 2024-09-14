@@ -13,18 +13,18 @@ from .util import handtheta_to_pulsewidth, lift_to_rotate, r_meter_to_rotate, y_
 from .util import theta_abs_to_count, theta_rad_to_rotate
 from .util import create_mainarm_status_msg, conveyer_count_to_rotate
 from .util import flip_bool_to_pulsewidth, create_seiton_status_msg
-from .util import hand_to_pulsewidth
+from .util import hand_to_pulsewidth, phi_to_pulsewidth
 # 昇降DC, r ブラシレス, θ ブラシレス, ハンド サーボ1, サーボ2, サーボ3，開ループDC
 
 LIMIT_ELEV_LOWER = 15
 LIMIT_CONVEYER_SENSOR = 0
 SERVO_HAND = 0
-SERVP_PHI = 1
+SERVO_PHI = 1
 SERVO_FLIP = 4
 SERVO_HAND_THETA = 5
 MOTOR_ELEV = 0
 
-ABS_OFFSET = 448.0
+ABS_OFFSET = 475.0
 THETA_MAX_VEL = 15.0
 R_MAX_VEL = 20.0
 Y_MAX_VEL = 5.0
@@ -89,6 +89,11 @@ class MinarmLowLayer(Node):
             self.get_logger().warn(
                 'rogilink or rogidrive status has not been received')
             return
+        
+        self.rogilink_cmd.servo[SERVO_FLIP].pulse_width_us = 0
+        self.rogilink_cmd.servo[SERVO_HAND].pulse_width_us = 0
+        self.rogilink_cmd.servo[SERVO_HAND_THETA].pulse_width_us = 0
+        self.rogilink_cmd.servo[SERVO_PHI].pulse_width_us = 0
 
         # rogidriveがすべてidleか
         rogidrive_initialized = True
@@ -113,12 +118,12 @@ class MinarmLowLayer(Node):
             self.rogidrive_set_count.publish(
                 RogidriveSetCount(name='R', count=0)
             )
-            self.rogidrive_set_count.publish(
-                RogidriveSetCount(name='Y', count=0)
-            )
-            self.rogidrive_set_count.publish(
-                RogidriveSetCount(name='CONVEYER', count=0)
-            )
+            # self.rogidrive_set_count.publish(
+            #     RogidriveSetCount(name='Y', count=0)
+            # )
+            # self.rogidrive_set_count.publish(
+            #     RogidriveSetCount(name='CONVEYER', count=0)
+            # )
             self.rogidrive_send('THETA', 1, 5.0, 0.0)
             time.sleep(0.1)
             self.rogidrive_enable.publish(Bool(data=True))
@@ -192,8 +197,11 @@ class MinarmLowLayer(Node):
         if abs(msg.theta - self.prev_mainarm_cmd.theta) > 1.5 * math.pi:
             self.get_logger().error('delta theta is too large')
             return
-        self.rogidrive_send('THETA', 1, THETA_MAX_VEL, theta_rad_to_rotate(
-            msg.theta))  # rad, 角度境界に注意
+        self.rogidrive_send('THETA', 1, (
+            THETA_MAX_VEL if abs(
+                self.prev_mainarm_cmd.theta - msg.theta
+            ) < 0.5 else 5.0), 
+            theta_rad_to_rotate(msg.theta))  # rad, 角度境界に注意
         self.rogidrive_send('R', 1, R_MAX_VEL,
                             r_meter_to_rotate(msg.r))  # 0 ~ 1m
         self.rogilink_cmd.motor[0].input_mode = (  # type: ignore
@@ -212,7 +220,7 @@ class MinarmLowLayer(Node):
         self.rogilink_cmd.servo[SERVO_HAND].pulse_width_us = (  # type: ignore
             hand_to_pulsewidth(msg.hand))
         self.rogilink_cmd.servo[SERVO_PHI].pulse_width_us = (  # type: ignore
-            hand_to_pulsewidth(msg.phi))
+            phi_to_pulsewidth(msg.phi))
 
         self.prev_mainarm_cmd = msg
 

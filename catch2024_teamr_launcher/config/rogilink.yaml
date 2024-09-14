@@ -3,7 +3,7 @@
     motor0:
       encoder_cpr: 8192.0
       pos_limit:
-        max: 2.7
+        max: 2.8
         max_is_active_high: 1
         max_pin: 16
         min: 0.0

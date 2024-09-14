@@ -16,7 +16,7 @@ class FullManual(Node):
             Joy, '/joy', self.joy_callback, 5)
         self.get_logger().info('full_manual has been started')
         self.mainarm_msg = MainArm()
-        self.tmr = self.create_timer(0.01, self.timer_callback)
+        self.tmr = self.create_timer(0.02, self.timer_callback)
         self.joy_msg = Joy()
         self.joy_msg.axes = [0.0]*8
         self.joy_msg.buttons = [0]*11
@@ -28,6 +28,8 @@ class FullManual(Node):
         self.cartesian_xy = [0, 0]
 
         self.mainarm_msg.lift = 1.0
+        
+        self.is_hand_up = True
 
     
     def get_field_color(self):
@@ -40,19 +42,19 @@ class FullManual(Node):
 
     def timer_callback(self):
         if self.coordinate_mode == CoordinateMode.POLAR:
-            self.mainarm_msg.theta += self.joy_msg.axes[Axes.LX]/100
+            self.mainarm_msg.theta += self.joy_msg.axes[Axes.LX]/100 * 2
             if self.mainarm_msg.theta < -math.pi/2:
                 self.mainarm_msg.theta = -math.pi/2
             elif self.mainarm_msg.theta > math.pi*3/2:
                 self.mainarm_msg.theta = math.pi*3/2
 
-            self.mainarm_msg.r += self.joy_msg.axes[Axes.LY] * 0.01
+            self.mainarm_msg.r += self.joy_msg.axes[Axes.LY] * 0.01 * 2
             if self.mainarm_msg.r < 0.0:
                 self.mainarm_msg.r = 0.0
             elif self.mainarm_msg.r > 1.0:
                 self.mainarm_msg.r = 1.0
 
-            self.mainarm_msg.handtheta -= self.joy_msg.axes[Axes.RX]/100
+            self.mainarm_msg.handtheta -= self.joy_msg.axes[Axes.RX]/100 * 2
             if self.mainarm_msg.handtheta < -math.pi/2:
                 self.mainarm_msg.handtheta = -math.pi/2
             elif self.mainarm_msg.handtheta > math.pi/2:
@@ -66,8 +68,8 @@ class FullManual(Node):
                                    (self.cartesian_xy[0], self.cartesian_xy[1]))
 
         elif self.coordinate_mode == CoordinateMode.CARTESIAN:
-            self.cartesian_xy[0] -= self.joy_msg.axes[Axes.LX]/100
-            self.cartesian_xy[1] += self.joy_msg.axes[Axes.LY]/100
+            self.cartesian_xy[0] -= self.joy_msg.axes[Axes.LX]/100 * 2
+            self.cartesian_xy[1] += self.joy_msg.axes[Axes.LY]/100 * 2
 
             self.mainarm_msg.r = math.sqrt(
                 self.cartesian_xy[0]**2 + self.cartesian_xy[1]**2)
@@ -82,16 +84,16 @@ class FullManual(Node):
                 self.mainarm_msg.theta = -math.pi/2
             elif self.mainarm_msg.theta > math.pi*3/2:
                 self.mainarm_msg.theta = math.pi*3/2
-            self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
+            # self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
 
             self.get_logger().info('x: %f, y: %f' %
                                    (self.cartesian_xy[0], self.cartesian_xy[1]))
 
-        self.mainarm_msg.lift -= (1 - (self.joy_msg.axes[Axes.RT]+1)/2)/100
+        self.mainarm_msg.lift -= (1 - (self.joy_msg.axes[Axes.RT]+1)/2)/100 * 2
         if self.mainarm_msg.lift < 0.0:
             self.mainarm_msg.lift = 0.0
 
-        self.mainarm_msg.lift += (1 - (self.joy_msg.axes[Axes.LT]+1)/2)/100
+        self.mainarm_msg.lift += (1 - (self.joy_msg.axes[Axes.LT]+1)/2)/100 * 2
         if self.mainarm_msg.lift > 1.0:
             self.mainarm_msg.lift = 1.0
 
@@ -99,7 +101,19 @@ class FullManual(Node):
             self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
 
         if self.joy_msg.buttons[Buttons.B] != self.previous_joy_msg.buttons[Buttons.B] and self.joy_msg.buttons[Buttons.B]:
-            if self.mainarm_msg.hand < 3:
+            # if self.is_hand_up:
+            #     if self.mainarm_msg.hand == 0:
+            #         self.mainarm_msg.hand = 2
+            #     elif self.mainarm_msg.hand == 2:
+            #         self.mainarm_msg.hand = 1    
+            #         self.is_hand_up = False
+            # else:
+            #     if self.mainarm_msg.hand == 1:
+            #         self.mainarm_msg.hand = 2
+            #     elif self.mainarm_msg.hand == 2:
+            #         self.mainarm_msg.hand = 0
+            #         self.is_hand_up = True
+            if self.mainarm_msg.hand < 4:
                 self.mainarm_msg.hand += 1
             else:
                 self.mainarm_msg.hand = 0
