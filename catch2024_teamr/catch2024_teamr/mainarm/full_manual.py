@@ -98,7 +98,7 @@ class FullManual(Node):
         if self.joy_msg.buttons[Buttons.LSTICK] == 1:
             self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
 
-        if self.joy_msg.buttons[Buttons.B]:
+        if self.joy_msg.buttons[Buttons.B] != self.previous_joy_msg.buttons[Buttons.B] and self.joy_msg.buttons[Buttons.B]:
             if self.mainarm_msg.hand < 3:
                 self.mainarm_msg.hand += 1
             else:
