@@ -99,10 +99,13 @@ class FullManual(Node):
             self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
 
         if self.joy_msg.buttons[Buttons.B]:
-            self.mainarm_msg.hand = 1
+            if self.mainarm_msg.hand < 3:
+                self.mainarm_msg.hand += 1
+            else:
+                self.mainarm_msg.hand = 0
 
-        if self.joy_msg.buttons[Buttons.A]:
-            self.mainarm_msg.hand = 0
+        if self.joy_msg.buttons[Buttons.A] != self.previous_joy_msg.buttons[Buttons.A] and self.joy_msg.buttons[Buttons.A]:
+            pass
 
         if self.joy_msg.buttons[Buttons.X]:
             if self.field_color == 'blue':
