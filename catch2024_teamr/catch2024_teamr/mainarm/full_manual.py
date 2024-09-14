@@ -23,9 +23,17 @@ class FullManual(Node):
         self.previous_joy_msg = self.joy_msg
         self.coordinate_mode = CoordinateMode.POLAR
 
+        self.field_color = self.get_field_color()
+
         self.cartesian_xy = [0, 0]
 
         self.mainarm_msg.lift = 1.0
+
+    
+    def get_field_color(self):
+        self.declare_parameter('field_color', 'blue')
+        field_color = self.get_parameter('field_color').value
+        return field_color   
 
     def joy_callback(self, msg):
         self.joy_msg = msg
@@ -97,10 +105,13 @@ class FullManual(Node):
             self.mainarm_msg.hand = 0
 
         if self.joy_msg.buttons[Buttons.X]:
-            self.mainarm_msg.phi = True
+            if self.field_color == 'blue':
+                self.mainarm_msg.phi = 1
+            else:
+                self.mainarm_msg.phi = -1
 
         if self.joy_msg.buttons[Buttons.Y]:
-            self.mainarm_msg.phi = False
+            self.mainarm_msg.phi = 0
 
         if self.joy_msg.buttons[Buttons.HOME] != self.previous_joy_msg.buttons[Buttons.HOME] and self.joy_msg.buttons[Buttons.HOME]:
             self.coordinate_mode = not self.coordinate_mode
