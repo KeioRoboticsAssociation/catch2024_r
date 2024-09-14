@@ -32,8 +32,12 @@ class SemiAuto(Node):
                     index_data.append([float(value) for value in row.values()])
             return index_data
 
+        # self.index_data = load_index_csv(
+        #     '/home/rogi/ros2_ws/src/catch2024_r/catch2024_teamr/catch2024_teamr/config/index.csv')
+
+        
         self.index_data = load_index_csv(
-            '/home/rogi/ros2_ws/src/catch2024_r/catch2024_teamr/catch2024_teamr/config/index.csv')
+            '/home/hirobon/ros2_ws/src/catch2024/catch2024_teamr/catch2024_teamr/config/index.csv')
 
         self.get_logger().info('index_data: %s' % self.index_data)
 
@@ -56,6 +60,8 @@ class SemiAuto(Node):
         self.joy_msg.buttons = [0]*11
         self.previous_joy_msg = self.joy_msg
         self.coordinate_mode = CoordinateMode.POLAR
+
+        self.get_logger().info('field_color: %s' % self.field_color)
 
         self.index = 0
 
@@ -91,7 +97,7 @@ class SemiAuto(Node):
                 -math.pi/2 > math.atan2(xyz[1], xyz[0]) > -math.pi
         ) else (math.atan2(xyz[1], xyz[0]) + 2*math.pi)
         self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
-        self.lift = xyz[2]
+        self.mainarm_msg.lift = float(xyz[2])
         self.pose_pub.publish(self.mainarm_msg)
 
     def send_target_rtz(self, rtz):
