@@ -80,7 +80,7 @@ class FullManual(Node):
         self.boxes.data = [BoxStatus() for _ in range(6)]
 
         self.recom_id = Int8MultiArray()
-        self.recom_id.data = [0, 0, 0]
+        self.recom_id.data = [5,5, 5]
 
         self.index = 0
 
@@ -152,15 +152,15 @@ class FullManual(Node):
         self.calc_recom()
 
     def calc_recom(self):
-        for i in range(6):
+        for i in reversed(range(6)):
             if self.boxes.data[i].ebishio < 3 and self.boxes.data[i].yuzushio <= 3 and self.boxes.data[i].norishio <= 3:
                 self.recom_id.data[0] = i
                 break
-        for i in range(6):
+        for i in reversed(range(6)):
             if self.boxes.data[i].yuzushio < 3 and self.boxes.data[i].norishio <= 3 and self.boxes.data[i].ebishio <= 3:
                 self.recom_id.data[1] = i
                 break
-        for i in range(6):
+        for i in reversed(range(6)):
             if self.boxes.data[i].norishio < 3 and self.boxes.data[i].ebishio <= 3 and self.boxes.data[i].yuzushio <= 3:
                 self.recom_id.data[2] = i
                 break

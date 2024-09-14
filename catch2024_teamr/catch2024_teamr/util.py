@@ -47,11 +47,11 @@ def hand_to_pulsewidth(hand: int) -> int:
 
 def phi_to_pulsewidth(phi: int) -> int:
     if phi == 0:
-        return 1600
+        return 1430
     elif phi == 1:
-        return 500
+        return 2300 
     else:
-        return 2400
+        return 450
 
 
 def y_meter_to_rotate(meter: float) -> float:
@@ -64,13 +64,13 @@ def conveyer_count_to_rotate(count: int) -> float:
 
 def flip_bool_to_pulsewidth(flip: bool) -> int:
     if flip:
-        return 1930
+        return 1960
     else:
         return 1100
 
 
 def lift_to_rotate(lift: float) -> float:
-    return lift * 2.7
+    return lift
 
 
 def create_mainarm_status_msg(rogilink: Status,

@@ -54,11 +54,12 @@ class FullManual(Node):
             elif self.mainarm_msg.r > 1.0:
                 self.mainarm_msg.r = 1.0
 
-            self.mainarm_msg.handtheta -= self.joy_msg.axes[Axes.RX]/100 * 2
-            if self.mainarm_msg.handtheta < -math.pi/2:
-                self.mainarm_msg.handtheta = -math.pi/2
-            elif self.mainarm_msg.handtheta > math.pi/2:
-                self.mainarm_msg.handtheta = math.pi/2
+            if abs(self.joy_msg.axes[Axes.RX]) > abs(self.joy_msg.axes[Axes.RY]):
+                self.mainarm_msg.handtheta += self.joy_msg.axes[Axes.RX]/100 * 2
+                if self.mainarm_msg.handtheta < -math.pi/2:
+                    self.mainarm_msg.handtheta = -math.pi/2
+                elif self.mainarm_msg.handtheta > math.pi/2:
+                    self.mainarm_msg.handtheta = math.pi/2
 
             self.cartesian_xy[0] = self.mainarm_msg.r * \
                 math.cos(self.mainarm_msg.theta)
@@ -86,33 +87,59 @@ class FullManual(Node):
                 self.mainarm_msg.theta = math.pi*3/2
             # self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
 
+
+            if abs(self.joy_msg.axes[Axes.RX]) > abs(self.joy_msg.axes[Axes.RY]):
+                self.mainarm_msg.handtheta += self.joy_msg.axes[Axes.RX]/100 * 2
+                if self.mainarm_msg.handtheta < -math.pi/2:
+                    self.mainarm_msg.handtheta = -math.pi/2
+                elif self.mainarm_msg.handtheta > math.pi/2:
+                    self.mainarm_msg.handtheta = math.pi/2
+
+
             self.get_logger().info('x: %f, y: %f' %
                                    (self.cartesian_xy[0], self.cartesian_xy[1]))
 
-        self.mainarm_msg.lift -= (1 - (self.joy_msg.axes[Axes.RT]+1)/2)/100 * 2
-        if self.mainarm_msg.lift < 0.0:
-            self.mainarm_msg.lift = 0.0
+        # self.mainarm_msg.lift -= (1 - (self.joy_msg.axes[Axes.RT]+1)/2)/100 * 2
+        # if self.mainarm_msg.lift < 0.0:
+        #     self.mainarm_msg.lift = 0.0
 
-        self.mainarm_msg.lift += (1 - (self.joy_msg.axes[Axes.LT]+1)/2)/100 * 2
+        # self.mainarm_msg.lift += (1 - (self.joy_msg.axes[Axes.LT]+1)/2)/100 * 2
+        # if self.mainarm_msg.lift > 1.0:
+        #     self.mainarm_msg.lift = 1.0
+         
+        # def filter_joy_theta(joy_xy, lower_theta, upper_theta):
+        #     try:
+        #         theta = math.atan(joy_xy[1]/-joy_xy[0])
+        #     except ZeroDivisionError:
+        #         if joy_xy[1] > 0:
+        #             theta = math.pi/2
+        #         else:
+        #             theta = -math.pi/2
+        #     if upper_theta < theta < math.pi/2 or -math.pi/2 < theta < lower_theta:
+        #         if joy_xy[0] < 0:
+        #             return -math.sqrt(joy_xy[1]**2 + joy_xy[0]**2)
+        #         else:
+        #             return math.sqrt(joy_xy[1]**2 + joy_xy[0]**2)
+        #     else:
+        #         return 0
+
+        if abs(self.joy_msg.axes[Axes.RY]) > abs(self.joy_msg.axes[Axes.RX]):
+            # self.mainarm_msg.lift += self.joy_msg.axes[Axes.RY]/100
+            self.mainarm_msg.lift = self.joy_msg.axes[Axes.RY]/2
+        else:
+            self.mainarm_msg.lift = 0.0
+        
+        # self.mainarm_msg.lift += filter_joy_theta([self.joy_msg.axes[Axes.RX], self.joy_msg.axes[Axes.RY]], -math.pi/4, math.pi/4)/100
         if self.mainarm_msg.lift > 1.0:
             self.mainarm_msg.lift = 1.0
+        if self.mainarm_msg.lift < -1.0:
+            self.mainarm_msg.lift = -1.0
 
         if self.joy_msg.buttons[Buttons.LSTICK] == 1:
             self.mainarm_msg.handtheta = 1.57-self.mainarm_msg.theta
 
         if self.joy_msg.buttons[Buttons.B] != self.previous_joy_msg.buttons[Buttons.B] and self.joy_msg.buttons[Buttons.B]:
-            # if self.is_hand_up:
-            #     if self.mainarm_msg.hand == 0:
-            #         self.mainarm_msg.hand = 2
-            #     elif self.mainarm_msg.hand == 2:
-            #         self.mainarm_msg.hand = 1    
-            #         self.is_hand_up = False
-            # else:
-            #     if self.mainarm_msg.hand == 1:
-            #         self.mainarm_msg.hand = 2
-            #     elif self.mainarm_msg.hand == 2:
-            #         self.mainarm_msg.hand = 0
-            #         self.is_hand_up = True
+
             if self.mainarm_msg.hand < 4:
                 self.mainarm_msg.hand += 1
             else:
@@ -122,6 +149,7 @@ class FullManual(Node):
             pass
 
         if self.joy_msg.buttons[Buttons.X]:
+            self.mainarm_msg.handtheta = 0.0
             if self.field_color == 'blue':
                 self.mainarm_msg.phi = 1
             else:
@@ -132,6 +160,14 @@ class FullManual(Node):
 
         if self.joy_msg.buttons[Buttons.HOME] != self.previous_joy_msg.buttons[Buttons.HOME] and self.joy_msg.buttons[Buttons.HOME]:
             self.coordinate_mode = not self.coordinate_mode
+
+
+        if self.joy_msg.buttons[Buttons.RB] != self.previous_joy_msg.buttons[Buttons.RB] and self.joy_msg.buttons[Buttons.RB]:
+            pass
+
+        if self.joy_msg.buttons[Buttons.LB] != self.previous_joy_msg.buttons[Buttons.LB] and self.joy_msg.buttons[Buttons.LB]:
+            pass
+
 
         self.pose_pub.publish(self.mainarm_msg)
         self.previous_joy_msg = self.joy_msg

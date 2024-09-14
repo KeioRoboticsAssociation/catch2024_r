@@ -112,9 +112,7 @@ class MinarmLowLayer(Node):
             ))
             self.rogidrive_set_count.publish(
                 RogidriveSetCount(name='THETA',
-                                  count=theta_abs_to_count(
-                                      self.rogilink_status.abs_enc,
-                                      ABS_OFFSET)))
+                                  count=0))
             self.rogidrive_set_count.publish(
                 RogidriveSetCount(name='R', count=0)
             )
@@ -124,7 +122,7 @@ class MinarmLowLayer(Node):
             # self.rogidrive_set_count.publish(
             #     RogidriveSetCount(name='CONVEYER', count=0)
             # )
-            self.rogidrive_send('THETA', 1, 5.0, 0.0)
+            # self.rogidrive_send('THETA', 1, 5.0, 0.0)
             time.sleep(0.1)
             self.rogidrive_enable.publish(Bool(data=True))
             self.rogilink_cmd.motor[0].input_vol = 0.0
@@ -197,22 +195,20 @@ class MinarmLowLayer(Node):
         if abs(msg.theta - self.prev_mainarm_cmd.theta) > 1.5 * math.pi:
             self.get_logger().error('delta theta is too large')
             return
-        self.rogidrive_send('THETA', 1, (
-            THETA_MAX_VEL if abs(
-                self.prev_mainarm_cmd.theta - msg.theta
-            ) < 0.5 else 5.0), 
+        self.rogidrive_send('THETA', 1, 
+            THETA_MAX_VEL,
             theta_rad_to_rotate(msg.theta))  # rad, 角度境界に注意
         self.rogidrive_send('R', 1, R_MAX_VEL,
                             r_meter_to_rotate(msg.r))  # 0 ~ 1m
         self.rogilink_cmd.motor[0].input_mode = (  # type: ignore
-            MotorCommand.COMMAND_POS)
-        if msg.lift < 0.0:
-            self.get_logger().error('lift is negative')
-            msg.lift = 0.0
+            MotorCommand.COMMAND_VOL)
+        if msg.lift < -1.0:
+            self.get_logger().error('lift is too small')
+            msg.lift = -1.0
         elif msg.lift > 1.0:
             self.get_logger().error('lift is too large')
             msg.lift = 1.0
-        self.rogilink_cmd.motor[0].input_pos = lift_to_rotate(
+        self.rogilink_cmd.motor[0].input_vol = lift_to_rotate(
             msg.lift)  # type: ignore
         self.rogilink_cmd.servo[  # type: ignore
             SERVO_HAND_THETA].pulse_width_us = (
