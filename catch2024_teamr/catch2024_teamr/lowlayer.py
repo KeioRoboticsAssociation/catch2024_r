@@ -131,9 +131,9 @@ class MinarmLowLayer(Node):
             self.get_logger().info('Initializing...')
             self.rogilink_cmd.motor[  # type: ignore
                 MOTOR_ELEV].input_mode = (MotorCommand.COMMAND_VOL)
-            self.rogilink_cmd.motor[  # type: ignore
-                MOTOR_ELEV].input_vol = 0.05
-            self.rogilink_pub.publish(self.rogilink_cmd)
+            # self.rogilink_cmd.motor[  # type: ignore
+            #     MOTOR_ELEV].input_vol = 0.05
+            # self.rogilink_pub.publish(self.rogilink_cmd)
 
     def seiton_mode(self):
         if self.prev_seiton_cmd is None:
@@ -223,7 +223,14 @@ class MinarmLowLayer(Node):
     def seiton_lowlayer_callback(self, msg: Seiton):
         if not self.initialized:
             return
-        self.get_logger().info('convayer: %f, Y: %f' % (msg.conveyer, msg.y))
+        self.get_logger().info('%s' % msg)
+        # self.get_logger().info('convayer: %f, Y: %f' % (msg.conveyer, msg.y))
+        self.rogidrive_send('Y', 1, Y_MAX_VEL, y_meter_to_rotate(msg.y))
+        self.rogidrive_send('CONVEYER', 0, msg.conveyer * -0.9, 0.0)
+        time.sleep(0.01)
+        self.rogidrive_send('Y', 1, Y_MAX_VEL, y_meter_to_rotate(msg.y))
+        self.rogidrive_send('CONVEYER', 0, msg.conveyer * -0.9, 0.0)
+        time.sleep(0.01)
         self.rogidrive_send('Y', 1, Y_MAX_VEL, y_meter_to_rotate(msg.y))
         self.rogidrive_send('CONVEYER', 0, msg.conveyer * -0.9, 0.0)
         self.rogilink_cmd.servo[SERVO_FLIP].pulse_width_us = (  # type: ignore
